@@ -1,0 +1,209 @@
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(14, 165, 233, 0.15), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(14, 165, 233, 0.08), transparent);
+  pointer-events: none;
+}
+
+/* Bolas luminosas espaciais */
+.hero-orbs {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(186, 230, 253, 0.85),
+    rgba(125, 211, 252, 0.6),
+    rgba(56, 189, 248, 0.35),
+    rgba(14, 165, 233, 0.15),
+    transparent 65%
+  );
+  filter: blur(50px);
+  opacity: 0.75;
+  animation: hero-orb-float 20s ease-in-out infinite;
+}
+
+.hero-orb-1 {
+  width:  min(90vw, 420px);
+  height: min(90vw, 420px);
+  top: 10%;
+  left: 5%;
+  animation-duration: 22s;
+  animation-delay: 0s;
+}
+
+.hero-orb-2 {
+  width:  min(70vw, 320px);
+  height: min(70vw, 320px);
+  top: 50%;
+  right: -5%;
+  animation-duration: 25s;
+  animation-delay: -5s;
+}
+
+.hero-orb-3 {
+  width:  min(80vw, 380px);
+  height: min(80vw, 380px);
+  bottom: -10%;
+  left: 20%;
+  animation-duration: 28s;
+  animation-delay: -10s;
+}
+
+.hero-orb-4 {
+  width:  min(60vw, 280px);
+  height: min(60vw, 280px);
+  top: 30%;
+  right: 25%;
+  animation-duration: 24s;
+  animation-delay: -3s;
+}
+
+@keyframes hero-orb-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(8%, -5%) scale(1.05);
+  }
+  50% {
+    transform: translate(-5%, 8%) scale(0.95);
+  }
+  75% {
+    transform: translate(-8%, -3%) scale(1.02);
+  }
+}
+
+/* Ondas pulsantes (pedra no lago) */
+.hero-ripples {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.hero-ripple {
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  margin-left: -140px;
+  margin-top: -140px;
+  border-radius: 50%;
+  border: 2px solid rgba(56, 189, 248, 0.5);
+  box-shadow:
+    0 0 30px rgba(56, 189, 248, 0.25),
+    inset 0 0 40px rgba(14, 165, 233, 0.08);
+  opacity: 0;
+  transform: scale(0.15);
+  animation: hero-ripple-wave 4s ease-out infinite;
+}
+
+@keyframes hero-ripple-wave {
+  0% {
+    transform: scale(0.15);
+    opacity: 0.65;
+    border-color: rgba(56, 189, 248, 0.55);
+  }
+  40% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+    border-color: rgba(56, 189, 248, 0.1);
+  }
+}
+
+.hero-content {
+  position: relative;
+  max-width: 42rem;
+  text-align: center;
+}
+
+.hero-badge {
+  display: inline-block;
+  padding: 0.5em 1.1em;
+  margin-bottom: 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.hero-title {
+  margin: 0 0 1rem;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+.hero-highlight {
+  color: var(--accent);
+  position: relative;
+}
+
+.hero-subtitle {
+  margin: 0 0 2rem;
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 40ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2.25em;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #0f1419;
+  background: linear-gradient(135deg, #38bdf8 0%, var(--accent) 50%, #0ea5e9 100%);
+  background-size: 200% 200%;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 20px rgba(14, 165, 233, 0.35),
+    0 0 40px rgba(56, 189, 248, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.3s ease, background-position 0.4s ease;
+}
+
+.hero-cta:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 8px 30px rgba(14, 165, 233, 0.5),
+    0 0 60px rgba(56, 189, 248, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  background-position: 100% 50%;
+}
+
+.hero-cta:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow:
+    0 2px 12px rgba(14, 165, 233, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}

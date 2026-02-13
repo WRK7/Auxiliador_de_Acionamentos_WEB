@@ -1,0 +1,15 @@
+{
+  "name": "auxiliador-de-acionamentos-web",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "dev:back": "cd backend && npm run dev",
+    "start:all": "concurrently \"npm run dev\" \"npm run dev:back\"",
+    "build": "cd frontend && npm run build",
+    "lint": "cd frontend && npm run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

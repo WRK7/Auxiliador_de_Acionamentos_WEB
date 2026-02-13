@@ -1,0 +1,45 @@
+.relogios {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  z-index: 1;
+}
+
+.relogio-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.4rem 0.6rem;
+  min-width: 0;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 8px;
+}
+
+.relogio-label {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.relogio-hora {
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #c9a227;
+}
+
+/* Em telas estreitas: relógios entram no fluxo para não sobrepor o título */
+@media (max-width: 768px) {
+  .relogios {
+    position: static;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+}
