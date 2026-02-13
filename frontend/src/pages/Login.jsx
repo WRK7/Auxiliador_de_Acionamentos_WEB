@@ -1,11 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { login } from '../utils/auth'
 import './Login.css'
-
-const CREDENCIAIS_TESTE = {
-  email: 'conciliador@teste.com',
-  senha: '123456',
-}
 
 export default function Login() {
   const navigate = useNavigate()
@@ -17,15 +13,13 @@ export default function Login() {
     e.preventDefault()
     setErro('')
 
-    const emailTrim = email.trim().toLowerCase()
-    const senhaTrim = senha.trim()
-
-    if (emailTrim === CREDENCIAIS_TESTE.email && senhaTrim === CREDENCIAIS_TESTE.senha) {
+    const result = login(email, senha)
+    if (result.success) {
       navigate('/dashboard')
       return
     }
 
-    setErro('Usuário ou senha incorretos. Use: conciliador@teste.com / 123456')
+    setErro(result.error || 'Usuário ou senha incorretos')
   }
 
   return (

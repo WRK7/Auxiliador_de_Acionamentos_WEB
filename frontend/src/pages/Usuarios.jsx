@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { apiBaseUrl } from '../api/config'
+import { isAdmin } from '../utils/auth'
 import Relogios from '../components/Relogios'
 import './Dashboard.css'
 import './Usuarios.css'
 
 export default function Usuarios() {
+  const navigate = useNavigate()
   const [lista, setLista] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
@@ -14,6 +16,13 @@ export default function Usuarios() {
   const [form, setForm] = useState({ nome: '', usuario: '', senha: '', ativo: true })
   const [erroForm, setErroForm] = useState('')
   const [salvando, setSalvando] = useState(false)
+
+  // Verifica se é admin, senão redireciona
+  useEffect(() => {
+    if (!isAdmin()) {
+      navigate('/dashboard')
+    }
+  }, [navigate])
 
   async function carregar() {
     setCarregando(true)
@@ -105,6 +114,11 @@ export default function Usuarios() {
     if (!s) return '-'
     const d = new Date(s)
     return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  // Se não for admin, não renderiza nada (já será redirecionado)
+  if (!isAdmin()) {
+    return null
   }
 
   return (
