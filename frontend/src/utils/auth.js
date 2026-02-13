@@ -1,55 +1,43 @@
 /**
- * Utilitários de autenticação simples usando localStorage
+ * Autenticação: login via API (tabela usuarios no banco) e dados no localStorage
  */
+import { apiBaseUrl } from '../api/config'
 
 const STORAGE_KEY = 'auth_user'
-const ROLE_ADMIN = 'admin'
-const ROLE_CONCILIADOR = 'conciliador'
 
 /**
- * Credenciais válidas (hardcoded para desenvolvimento)
+ * Faz login chamando a API e salva o usuário no localStorage
+ * @param {string} usuario - Login (ex.: e-mail)
+ * @param {string} senha - Senha em texto
+ * @returns {Promise<{ success: boolean, error?: string }>}
  */
-export const CREDENCIAIS = {
-  conciliador: {
-    email: 'conciliador@teste.com',
-    senha: '123456',
-    role: ROLE_CONCILIADOR,
-  },
-  admin: {
-    email: 'wesley@teste.com',
-    senha: 'w1234567',
-    role: ROLE_ADMIN,
-  },
-}
-
-/**
- * Faz login e salva no localStorage
- */
-export function login(email, senha) {
-  const emailTrim = email.trim().toLowerCase()
-  const senhaTrim = senha.trim()
-
-  // Verifica credenciais de conciliador
-  if (emailTrim === CREDENCIAIS.conciliador.email && senhaTrim === CREDENCIAIS.conciliador.senha) {
+export async function login(usuario, senha) {
+  const usuarioTrim = usuario?.trim() ?? ''
+  const senhaTrim = senha?.trim() ?? ''
+  if (!usuarioTrim || !senhaTrim) {
+    return { success: false, error: 'Usuário e senha são obrigatórios' }
+  }
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario: usuarioTrim, senha: senhaTrim }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || !data.ok) {
+      return { success: false, error: data.error || 'Usuário ou senha incorretos' }
+    }
     const userData = {
-      email: CREDENCIAIS.conciliador.email,
-      role: CREDENCIAIS.conciliador.role,
+      id: data.user.id,
+      nome: data.user.nome,
+      usuario: data.user.usuario,
+      perfil: data.user.perfil,
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
-    return { success: true, role: CREDENCIAIS.conciliador.role }
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message || 'Erro ao conectar. Verifique se o backend está rodando.' }
   }
-
-  // Verifica credenciais de admin
-  if (emailTrim === CREDENCIAIS.admin.email && senhaTrim === CREDENCIAIS.admin.senha) {
-    const userData = {
-      email: CREDENCIAIS.admin.email,
-      role: CREDENCIAIS.admin.role,
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
-    return { success: true, role: CREDENCIAIS.admin.role }
-  }
-
-  return { success: false, error: 'Usuário ou senha incorretos' }
 }
 
 /**
@@ -79,25 +67,31 @@ export function isAuthenticated() {
 }
 
 /**
- * Verifica se o usuário é admin
+ * Verifica se o usuário é admin ou admin supremo
  */
 export function isAdmin() {
   const user = getUser()
-  return user?.role === ROLE_ADMIN
+  const p = user?.perfil
+  return p === 'admin' || p === 'admin_supremo'
+}
+
+/**
+ * Verifica se o usuário é admin supremo
+ */
+export function isAdminSupremo() {
+  return getUser()?.perfil === 'admin_supremo'
 }
 
 /**
  * Verifica se o usuário é conciliador
  */
 export function isConciliador() {
-  const user = getUser()
-  return user?.role === ROLE_CONCILIADOR
+  return getUser()?.perfil === 'conciliador'
 }
 
 /**
- * Obtém o role do usuário atual
+ * Retorna o perfil do usuário atual (conciliador | admin | admin_supremo)
  */
 export function getUserRole() {
-  const user = getUser()
-  return user?.role || null
+  return getUser()?.perfil ?? null
 }

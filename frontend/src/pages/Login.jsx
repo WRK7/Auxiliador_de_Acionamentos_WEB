@@ -9,11 +9,11 @@ export default function Login() {
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     setErro('')
 
-    const result = login(email, senha)
+    const result = await login(email, senha)
     if (result.success) {
       navigate('/dashboard')
       return

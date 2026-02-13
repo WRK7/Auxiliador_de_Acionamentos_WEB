@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiBaseUrl } from '../api/config'
-import { isAdmin } from '../utils/auth'
+import { isAdmin, getUser } from '../utils/auth'
 import Relogios from '../components/Relogios'
 import './Dashboard.css'
 import './Usuarios.css'
@@ -14,6 +14,25 @@ const PERFIS = [
 
 function labelPerfil(value) {
   return PERFIS.find((p) => p.value === value)?.label ?? value
+}
+
+/** Admin supremo: todos. Admin: conciliadores e a si mesmo. Conciliador: não gerencia ninguém (nem a si). */
+function podeGerenciarUsuario(logado, alvo) {
+  if (!logado || !alvo) return false
+  if (logado.perfil === 'admin_supremo') return true
+  if (logado.perfil === 'admin') return alvo.perfil === 'conciliador' || alvo.id === logado.id
+  return false
+}
+
+/** Perfis que o usuário logado pode atribuir. Admin só Conciliador; ao editar a si mesmo, só o próprio perfil. */
+function perfisPermitidos(logado, editando) {
+  if (!logado) return []
+  if (logado.perfil === 'admin_supremo') return PERFIS
+  if (logado.perfil === 'admin') {
+    if (editando?.id === logado.id) return [{ value: 'admin', label: 'Admin' }]
+    return PERFIS.filter((p) => p.value === 'conciliador')
+  }
+  return []
 }
 
 export default function Usuarios() {
@@ -131,6 +150,9 @@ export default function Usuarios() {
     return null
   }
 
+  const userLogado = getUser()
+  const perfisSelect = perfisPermitidos(userLogado, editando)
+
   return (
     <main className="dashboard-page usuarios-page">
       <aside className="dashboard-sidebar" aria-label="Menu principal">
@@ -170,7 +192,8 @@ export default function Usuarios() {
 
       <div className="dashboard-conteudo">
         <Relogios />
-        <div className="usuarios-conteudo">
+        <div className="usuarios-layout">
+          <div className="usuarios-conteudo">
           <div className="usuarios-header">
             <h1 className="dashboard-titulo">Usuários</h1>
             <p className="usuarios-subtitulo">Cadastro e gerenciamento de conciliadores</p>
@@ -216,12 +239,18 @@ export default function Usuarios() {
                         <td>{u.ativo ? 'Sim' : 'Não'}</td>
                         <td>{formatarData(u.created_at)}</td>
                         <td>
-                          <button type="button" className="usuarios-btn usuarios-btn-editar" onClick={() => abrirEditar(u)} title="Editar">
-                            Editar
-                          </button>
-                          <button type="button" className="usuarios-btn usuarios-btn-excluir" onClick={() => handleExcluir(u.id, u.nome)} title="Excluir">
-                            Excluir
-                          </button>
+                          {podeGerenciarUsuario(userLogado, u) ? (
+                            <>
+                              <button type="button" className="usuarios-btn usuarios-btn-editar" onClick={() => abrirEditar(u)} title="Editar">
+                                Editar
+                              </button>
+                              <button type="button" className="usuarios-btn usuarios-btn-excluir" onClick={() => handleExcluir(u.id, u.nome)} title="Excluir">
+                                Excluir
+                              </button>
+                            </>
+                          ) : (
+                            <span className="usuarios-acao-restrita" title="Sem permissão para este perfil">—</span>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -230,12 +259,19 @@ export default function Usuarios() {
               </table>
             </div>
           )}
+          </div>
+          <aside className="usuarios-sidebar">
+            <div className="usuarios-card usuarios-card-solicitacoes">
+              <h3 className="usuarios-card-titulo">Solicitações</h3>
+              <p className="usuarios-card-texto">As solicitações de cadastro aparecerão aqui.</p>
+            </div>
+          </aside>
         </div>
       </div>
 
       {modalAberto && (
-        <div className="usuarios-modal-overlay" onClick={fecharModal}>
-          <div className="usuarios-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="usuarios-modal-overlay" role="dialog" aria-modal="true">
+          <div className="usuarios-modal">
             <h2 className="usuarios-modal-titulo">{editando ? 'Editar usuário' : 'Novo usuário'}</h2>
             <form className="usuarios-form" onSubmit={handleSubmit}>
               {erroForm && <p className="usuarios-form-erro" role="alert">{erroForm}</p>}
@@ -264,10 +300,10 @@ export default function Usuarios() {
                 Perfil
                 <select
                   className="usuarios-input usuarios-select"
-                  value={form.perfil}
+                  value={perfisSelect.some((p) => p.value === form.perfil) ? form.perfil : (perfisSelect[0]?.value ?? 'conciliador')}
                   onChange={(e) => setForm((f) => ({ ...f, perfil: e.target.value }))}
                 >
-                  {PERFIS.map((p) => (
+                  {perfisSelect.map((p) => (
                     <option key={p.value} value={p.value}>{p.label}</option>
                   ))}
                 </select>

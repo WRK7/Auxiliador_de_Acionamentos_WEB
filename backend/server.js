@@ -3,13 +3,19 @@ import express from 'express'
 import cors from 'cors'
 import { ping } from './db.js'
 import usuariosRouter from './routes/usuarios.js'
+import authRouter from './routes/auth.js'
 
 const app = express()
 const PORT = process.env.PORT || 3089
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3088'
+// Várias origens separadas por vírgula; aceita acesso por localhost ou IP da rede (ex.: 10.100.20.137:3088)
+const CORS_ORIGINS = (process.env.CORS_ORIGIN || 'http://localhost:3088,http://10.100.20.137:3088')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean)
 
-app.use(cors({ origin: CORS_ORIGIN }))
+app.use(cors({ origin: CORS_ORIGINS, credentials: true }))
 app.use(express.json())
+app.use('/api/auth', authRouter)
 app.use('/api/usuarios', usuariosRouter)
 
 app.get('/api/health', async (req, res) => {

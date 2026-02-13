@@ -263,15 +263,11 @@ export default function Historico() {
       {detalhe && (
         <div
           className="historico-modal-overlay"
-          onClick={() => setDetalheId(null)}
           role="dialog"
           aria-modal="true"
           aria-labelledby="historico-modal-titulo"
         >
-          <div
-            className="historico-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="historico-modal">
             <div className="historico-modal-header">
               <h2 id="historico-modal-titulo" className="historico-modal-titulo">
                 {detalhe.id} · {detalhe.carteira} · {detalhe.tipo}

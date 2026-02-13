@@ -1,9 +1,48 @@
 /* Usuários: listagem, modal de cadastro/edição */
 
+.usuarios-layout {
+  display: flex;
+  gap: 1.25rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
 .usuarios-page .usuarios-conteudo {
+  flex: 1 1 400px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.usuarios-sidebar {
+  flex: 0 0 260px;
+  min-width: 0;
+  display: flex;
+}
+
+.usuarios-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.usuarios-card-solicitacoes .usuarios-card-titulo {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.usuarios-card-solicitacoes .usuarios-card-texto {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
 }
 
 .usuarios-header {
@@ -105,6 +144,11 @@
   border-color: var(--error);
   background: rgba(239, 68, 68, 0.1);
   color: var(--error);
+}
+
+.usuarios-acao-restrita {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
 /* Modal */
