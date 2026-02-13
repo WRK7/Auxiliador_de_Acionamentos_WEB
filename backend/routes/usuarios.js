@@ -5,11 +5,13 @@ import bcrypt from 'bcryptjs'
 const router = Router()
 const SALT_ROUNDS = 10
 
+const CAMPOS_USUARIO = 'id, nome, usuario, perfil, ativo, created_at, updated_at'
+
 /** Lista todos os usuários (sem expor senha). */
 router.get('/', async (req, res) => {
   try {
     const rows = await query(
-      'SELECT id, nome, usuario, ativo, created_at, updated_at FROM usuarios ORDER BY nome'
+      `SELECT ${CAMPOS_USUARIO} FROM usuarios ORDER BY FIELD(perfil, 'admin_supremo', 'admin', 'conciliador'), nome`
     )
     res.json(rows)
   } catch (err) {
@@ -21,7 +23,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const [row] = await query(
-      'SELECT id, nome, usuario, ativo, created_at, updated_at FROM usuarios WHERE id = ?',
+      `SELECT ${CAMPOS_USUARIO} FROM usuarios WHERE id = ?`,
       [req.params.id]
     )
     if (!row) return res.status(404).json({ error: 'Usuário não encontrado' })
@@ -31,20 +33,26 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-/** Cria usuário. Body: { nome, usuario, senha } */
+/** Valida perfil. */
+function perfilValido(p) {
+  return p === 'conciliador' || p === 'admin' || p === 'admin_supremo'
+}
+
+/** Cria usuário. Body: { nome, usuario, senha, perfil? } */
 router.post('/', async (req, res) => {
   try {
-    const { nome, usuario, senha } = req.body
+    const { nome, usuario, senha, perfil } = req.body
     if (!nome?.trim() || !usuario?.trim() || !senha?.trim()) {
       return res.status(400).json({ error: 'Nome, usuário e senha são obrigatórios' })
     }
+    const perfilFinal = perfilValido(perfil) ? perfil : 'conciliador'
     const senhaHash = await bcrypt.hash(senha.trim(), SALT_ROUNDS)
     const result = await query(
-      'INSERT INTO usuarios (nome, usuario, senha_hash) VALUES (?, ?, ?)',
-      [nome.trim(), usuario.trim().toLowerCase(), senhaHash]
+      'INSERT INTO usuarios (nome, usuario, senha_hash, perfil) VALUES (?, ?, ?, ?)',
+      [nome.trim(), usuario.trim().toLowerCase(), senhaHash, perfilFinal]
     )
     const [inserted] = await query(
-      'SELECT id, nome, usuario, ativo, created_at, updated_at FROM usuarios WHERE id = ?',
+      `SELECT ${CAMPOS_USUARIO} FROM usuarios WHERE id = ?`,
       [result.insertId]
     )
     res.status(201).json(inserted)
@@ -56,11 +64,11 @@ router.post('/', async (req, res) => {
   }
 })
 
-/** Atualiza usuário. Body: { nome?, usuario?, senha?, ativo? } */
+/** Atualiza usuário. Body: { nome?, usuario?, senha?, ativo?, perfil? } */
 router.put('/:id', async (req, res) => {
   try {
     const id = req.params.id
-    const { nome, usuario, senha, ativo } = req.body
+    const { nome, usuario, senha, ativo, perfil } = req.body
     const updates = []
     const params = []
     if (nome !== undefined) {
@@ -70,6 +78,10 @@ router.put('/:id', async (req, res) => {
     if (usuario !== undefined) {
       updates.push('usuario = ?')
       params.push(usuario.trim().toLowerCase())
+    }
+    if (perfil !== undefined && perfilValido(perfil)) {
+      updates.push('perfil = ?')
+      params.push(perfil)
     }
     if (senha !== undefined && senha !== '') {
       updates.push('senha_hash = ?')
@@ -81,7 +93,7 @@ router.put('/:id', async (req, res) => {
     }
     if (updates.length === 0) {
       const [row] = await query(
-        'SELECT id, nome, usuario, ativo, created_at, updated_at FROM usuarios WHERE id = ?',
+        `SELECT ${CAMPOS_USUARIO} FROM usuarios WHERE id = ?`,
         [id]
       )
       if (!row) return res.status(404).json({ error: 'Usuário não encontrado' })
@@ -93,7 +105,7 @@ router.put('/:id', async (req, res) => {
       params
     )
     const [row] = await query(
-      'SELECT id, nome, usuario, ativo, created_at, updated_at FROM usuarios WHERE id = ?',
+      `SELECT ${CAMPOS_USUARIO} FROM usuarios WHERE id = ?`,
       [id]
     )
     if (!row) return res.status(404).json({ error: 'Usuário não encontrado' })

@@ -6,6 +6,16 @@ import Relogios from '../components/Relogios'
 import './Dashboard.css'
 import './Usuarios.css'
 
+const PERFIS = [
+  { value: 'conciliador', label: 'Conciliador' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'admin_supremo', label: 'Admin supremo' },
+]
+
+function labelPerfil(value) {
+  return PERFIS.find((p) => p.value === value)?.label ?? value
+}
+
 export default function Usuarios() {
   const navigate = useNavigate()
   const [lista, setLista] = useState([])
@@ -13,7 +23,7 @@ export default function Usuarios() {
   const [erro, setErro] = useState('')
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState(null)
-  const [form, setForm] = useState({ nome: '', usuario: '', senha: '', ativo: true })
+  const [form, setForm] = useState({ nome: '', usuario: '', senha: '', perfil: 'conciliador', ativo: true })
   const [erroForm, setErroForm] = useState('')
   const [salvando, setSalvando] = useState(false)
 
@@ -46,14 +56,14 @@ export default function Usuarios() {
 
   function abrirNovo() {
     setEditando(null)
-    setForm({ nome: '', usuario: '', senha: '', ativo: true })
+    setForm({ nome: '', usuario: '', senha: '', perfil: 'conciliador', ativo: true })
     setErroForm('')
     setModalAberto(true)
   }
 
   function abrirEditar(u) {
     setEditando(u)
-    setForm({ nome: u.nome, usuario: u.usuario, senha: '', ativo: !!u.ativo })
+    setForm({ nome: u.nome, usuario: u.usuario, senha: '', perfil: u.perfil || 'conciliador', ativo: !!u.ativo })
     setErroForm('')
     setModalAberto(true)
   }
@@ -83,8 +93,8 @@ export default function Usuarios() {
     const url = editando ? `${apiBaseUrl}/api/usuarios/${editando.id}` : `${apiBaseUrl}/api/usuarios`
     const method = editando ? 'PUT' : 'POST'
     const body = editando
-      ? { nome: form.nome.trim(), usuario: form.usuario.trim(), ativo: form.ativo, ...(form.senha.trim() && { senha: form.senha }) }
-      : { nome: form.nome.trim(), usuario: form.usuario.trim(), senha: form.senha, ativo: form.ativo }
+      ? { nome: form.nome.trim(), usuario: form.usuario.trim(), perfil: form.perfil, ativo: form.ativo, ...(form.senha.trim() && { senha: form.senha }) }
+      : { nome: form.nome.trim(), usuario: form.usuario.trim(), senha: form.senha, perfil: form.perfil, ativo: form.ativo }
     fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
@@ -184,6 +194,7 @@ export default function Usuarios() {
                   <tr>
                     <th>Nome</th>
                     <th>Usuário (login)</th>
+                    <th>Perfil</th>
                     <th>Ativo</th>
                     <th>Criado em</th>
                     <th aria-label="Ações" />
@@ -192,7 +203,7 @@ export default function Usuarios() {
                 <tbody>
                   {lista.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="usuarios-vazio">
+                      <td colSpan={6} className="usuarios-vazio">
                         Nenhum usuário cadastrado. Clique em &quot;Novo usuário&quot; para começar.
                       </td>
                     </tr>
@@ -201,6 +212,7 @@ export default function Usuarios() {
                       <tr key={u.id}>
                         <td>{u.nome}</td>
                         <td>{u.usuario}</td>
+                        <td><span className="usuarios-perfil" data-perfil={u.perfil}>{labelPerfil(u.perfil)}</span></td>
                         <td>{u.ativo ? 'Sim' : 'Não'}</td>
                         <td>{formatarData(u.created_at)}</td>
                         <td>
@@ -247,6 +259,19 @@ export default function Usuarios() {
                   placeholder="Login para acessar o sistema"
                   autoComplete="username"
                 />
+              </label>
+              <label className="usuarios-label">
+                Perfil
+                <select
+                  className="usuarios-input usuarios-select"
+                  value={form.perfil}
+                  onChange={(e) => setForm((f) => ({ ...f, perfil: e.target.value }))}
+                >
+                  {PERFIS.map((p) => (
+                    <option key={p.value} value={p.value}>{p.label}</option>
+                  ))}
+                </select>
+                <span className="usuarios-label-hint">Conciliador: tudo exceto usuários. Admin: tudo exceto admin supremo e outros admins. Admin supremo: tudo.</span>
               </label>
               <label className="usuarios-label">
                 {editando ? 'Nova senha (deixe em branco para não alterar)' : 'Senha'}
