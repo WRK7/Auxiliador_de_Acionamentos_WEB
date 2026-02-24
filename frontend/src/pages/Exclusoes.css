@@ -1,0 +1,136 @@
+.exclusoes-page .exclusoes-conteudo {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.exclusoes-subtitulo {
+  margin: -0.5rem 0 1rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.exclusoes-erro {
+  padding: 0.75rem 1rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: var(--error);
+  font-size: 0.9rem;
+}
+
+.exclusoes-filtros {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.exclusoes-filtros .dashboard-filtro.exclusoes-filtro-texto {
+  width: auto;
+  flex: 1 1 auto;
+  min-width: 120px;
+  max-width: 400px;
+  margin-bottom: 0;
+}
+
+.exclusoes-filtro-data {
+  padding: 0.5rem 0.65rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 140px;
+  min-width: 140px;
+}
+
+.exclusoes-filtro-data:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.exclusoes-filtro-sep {
+  color: var(--text-secondary);
+  font-weight: 500;
+  user-select: none;
+}
+
+.exclusoes-carregando {
+  padding: 1.5rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 0;
+}
+
+.exclusoes-tabela-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+}
+
+.exclusoes-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.exclusoes-tabela th,
+.exclusoes-tabela td {
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.exclusoes-tabela th {
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  white-space: nowrap;
+}
+
+.exclusoes-tabela tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.exclusoes-tabela td {
+  color: var(--text-primary);
+}
+
+.exclusoes-data {
+  white-space: nowrap;
+}
+
+.exclusoes-codigo {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+.exclusoes-resumo {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exclusoes-usuario-del {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.exclusoes-vazio {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem !important;
+}
+
+@media (max-width: 720px) {
+  .exclusoes-filtros {
+    flex-wrap: wrap;
+  }
+  .exclusoes-filtros .dashboard-filtro.exclusoes-filtro-texto {
+    max-width: none;
+    width: 100%;
+  }
+}

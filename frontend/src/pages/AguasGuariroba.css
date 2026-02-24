@@ -1,0 +1,718 @@
+/* ============================================================
+   Urania - Calculadora Águas Guariroba
+   Tech-panel horizontal layout
+   ============================================================ */
+
+/* Barra de abas */
+.ag-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 20px 0;
+  padding-right: 220px;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.ag-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px 8px 0 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  color: var(--text-secondary, #999);
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.ag-tab:hover {
+  background: var(--bg-secondary, #1e2530);
+  color: var(--text-primary, #fff);
+}
+
+.ag-tab--active {
+  background: var(--bg-secondary, #1e2530);
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.ag-tab-label {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ag-tab-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  opacity: 0.6;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.ag-tab-close:hover {
+  opacity: 1;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.ag-tab--add {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--accent);
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  min-width: 36px;
+  justify-content: center;
+}
+
+.ag-tab--add:hover {
+  background: rgba(var(--accent-rgb, 99, 102, 241), 0.1);
+  border-color: var(--accent);
+}
+
+/* ============================================================
+   Container
+   ============================================================ */
+.ag-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 20px 60px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 120px);
+}
+
+/* Screens */
+.ag-container .ag-screen {
+  display: none;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ag-container .ag-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.6;
+}
+
+.ag-container .ag-screen-active {
+  display: block;
+}
+
+/* Initial screen – compact centered */
+.ag-screen--initial {
+  max-width: 640px;
+}
+
+/* Discount screen – medium */
+.ag-screen--mid {
+  max-width: 1050px;
+}
+
+/* Action/Installment screens – full-width panel */
+.ag-screen--wide {
+  max-width: 1500px;
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+.ag-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.ag-project-name {
+  font-size: 2rem;
+  font-weight: 300;
+  margin: 0 0 4px 0;
+  background: linear-gradient(45deg, var(--accent), var(--accent-hover));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 2px;
+}
+
+.ag-project-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #94a3b8);
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+
+/* ============================================================
+   Initial screen – horizontal row
+   ============================================================ */
+.ag-initial-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+
+/* ============================================================
+   Panel grid – horizontal multi-column layout
+   ============================================================ */
+.ag-panel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.ag-panel-grid--action {
+  grid-template-columns: 320px 1fr;
+}
+
+.ag-panel-grid--3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.ag-panel {
+  background: var(--bg-secondary, #131a24);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ag-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.35;
+}
+
+.ag-panel-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ag-panel-title::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Form helpers – 2-col rows inside panels
+   ============================================================ */
+.ag-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* ============================================================
+   Input groups
+   ============================================================ */
+.ag-input-group {
+  margin-bottom: 14px;
+}
+
+.ag-input-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ag-input-group input,
+.ag-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card, #0d1117);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.ag-input-group input:focus,
+.ag-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+}
+
+.ag-input-group input::placeholder {
+  color: #475569;
+}
+
+.ag-select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.ag-button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.ag-btn {
+  flex: 1;
+  padding: 11px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+.ag-btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.ag-btn-primary:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+}
+
+.ag-btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.ag-btn-secondary:hover {
+  background: var(--border);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.04);
+}
+
+.ag-btn-action {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  min-height: 44px;
+  flex: 1;
+}
+
+.ag-btn-action:hover {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  filter: brightness(1.1);
+}
+
+.ag-btn-back {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  flex: 0 0 auto;
+  min-width: 120px;
+}
+
+.ag-btn-back:hover {
+  background: var(--border);
+}
+
+.ag-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: saturate(0.5);
+}
+
+.ag-btn-action--ok {
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.35);
+  animation: ag-btn-pulse 0.4s ease-out;
+}
+
+.ag-btn-action--erro {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+@keyframes ag-btn-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+/* Action bar (Voltar + Copiar Acionamento) */
+.ag-panel-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+/* ============================================================
+   Number input spinners
+   ============================================================ */
+.ag-container input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.ag-container input[type="number"]::-webkit-outer-spin-button,
+.ag-container input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ============================================================
+   Info display – metric cards
+   ============================================================ */
+.ag-info-display {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.ag-info-display--stack {
+  grid-template-columns: 1fr;
+}
+
+.ag-info-item {
+  background: var(--bg-card, #0d1117);
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.ag-info-item--accent {
+  border-color: var(--accent);
+  background: rgba(14, 165, 233, 0.06);
+}
+
+.ag-info-item--accent p {
+  color: var(--accent);
+}
+
+.ag-info-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  opacity: 0.3;
+}
+
+.ag-info-item h3 {
+  margin: 0 0 4px 0;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 500;
+}
+
+.ag-info-item p {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   Discount slider
+   ============================================================ */
+.ag-discount-control {
+  margin: 16px 0;
+}
+
+.ag-discount-control h3 {
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.ag-slider {
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.ag-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.ag-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+/* ============================================================
+   Calculation results
+   ============================================================ */
+.ag-calculation-results {
+  margin-top: 16px;
+}
+
+.ag-result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.ag-result-item:last-child {
+  border-bottom: none;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.ag-result-highlight {
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  border-radius: 8px;
+  padding: 12px 14px !important;
+  margin-top: 8px;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+/* ============================================================
+   Radio buttons
+   ============================================================ */
+.ag-radio-group {
+  margin-bottom: 14px;
+}
+
+.ag-radio-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ag-radio-options {
+  display: flex;
+  gap: 20px;
+}
+
+.ag-radio-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 6px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.ag-radio-option input {
+  accent-color: var(--accent);
+}
+
+/* ============================================================
+   Validation feedback
+   ============================================================ */
+.ag-input-group input.ag-input-valid {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.ag-input-group input.ag-input-invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.ag-input-group input.ag-input-typing {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
+}
+
+.ag-doc-error {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.ag-salvar-erro {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: #fef2f2;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+  max-width: 1200px;
+}
+
+/* ============================================================
+   Toast notification
+   ============================================================ */
+.ag-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  box-shadow: 0 8px 30px rgba(34, 197, 94, 0.35);
+  z-index: 9999;
+  animation: ag-toast-in 0.35s ease-out;
+  pointer-events: none;
+}
+
+@keyframes ag-toast-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ============================================================
+   Watermark
+   ============================================================ */
+.ag-watermark {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 1100px) {
+  .ag-panel-grid--3 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ag-panel-grid--3 .ag-panel--client {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .ag-tabs-bar {
+    padding-right: 20px;
+  }
+
+  .ag-panel-grid,
+  .ag-panel-grid--3,
+  .ag-panel-grid--action {
+    grid-template-columns: 1fr;
+  }
+
+  .ag-initial-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ag-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ag-info-display {
+    grid-template-columns: 1fr;
+  }
+
+  .ag-button-group,
+  .ag-panel-actions {
+    flex-direction: column;
+  }
+
+  .ag-container .ag-screen {
+    padding: 20px;
+  }
+
+  .ag-btn-back {
+    min-width: unset;
+  }
+}

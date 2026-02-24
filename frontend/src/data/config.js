@@ -13,6 +13,8 @@ export const CARTEIRAS = [
   'UNIMED',
   'FIRJAN',
   'FIEB',
+  'VUON CARD',
+  'ÁGUAS GUARIROBA',
 ]
 
 /** Dias máximos entre hoje e Data de Vencimento. Default 7 se carteira não estiver no mapa. */
@@ -26,6 +28,7 @@ export const PRAZO_MAXIMO_POR_CARTEIRA = {
   'UNIMED': 2,
   'FIRJAN': 7,
   'FIEB': 7,
+  'VUON CARD': 40,
 }
 
 /** Para cada carteira, lista de tipos de acionamento permitidos. */
@@ -39,6 +42,7 @@ export const TIPOS_POR_CARTEIRA = {
   'UNIMED': ['ACD - ACORDO'],
   'FIRJAN': ['ACF - A VISTA', 'ACF - BOLETO'],
   'FIEB': ['ACD - A VISTA', 'ACD - BOLETO'],
+  'VUON CARD': ['DDA - ACORDO À VISTA', 'ACD - ACORDO PARCELADO'],
 }
 
 /** Chave: "Carteira - Tipo". Valor: lista ordenada de nomes de campos. */
@@ -114,6 +118,14 @@ export const CAMPOS_POR_TIPO = {
     'Contratante', 'CPF/CNPJ', 'Faturas a Pagar', 'Títulos', 'Dias em Atraso', 'Forma de Pagamento', 'Data de Pagamento',
     'Valor Original', 'Valor Atualizado', 'Telefone',
   ],
+  'VUON CARD - DDA - ACORDO À VISTA': [
+    'Nome do Devedor', 'CPF/CNPJ', 'Valor da Dívida', 'Desconto (%)', 'Valor para Pagamento',
+    'Data de Vencimento', 'WhatsApp', 'E-mail', 'Boleto Enviado?',
+  ],
+  'VUON CARD - ACD - ACORDO PARCELADO': [
+    'Nome do Devedor', 'CPF/CNPJ', 'Valor da Dívida', 'Desconto (%)', 'Valor da Entrada',
+    'Qtd de Parcelas', 'Valor da Parcela', 'Data de Vencimento', 'WhatsApp', 'E-mail', 'Boleto Enviado?',
+  ],
 }
 
 /** Campos que não podem ficar vazios na geração (marcados com * na doc). */
@@ -126,6 +138,8 @@ export const CAMPOS_OBRIGATORIOS = [
   'QUANT P', 'TITULO', 'Valor Total', 'Entrada', 'Parcelas', 'Valor da Parcela',
   'Unidade', 'Referência', 'Valor da Entrada', 'Quantidade de Parcelas', 'Valor de Cada Parcela',
   'Contratante', 'Faturas a Pagar', 'Títulos', 'Dias em Atraso', 'Data de Pagamento', 'E-mail',
+  'Valor da Dívida', 'Desconto (%)', 'Valor para Pagamento', 'Valor da Entrada', 'Valor da Parcela',
+  'Boleto Enviado?',
 ]
 
 /** Lista de opções (carteira + tipo) que têm formulário. Para os cardzinhos. */
@@ -222,6 +236,10 @@ export const FORMATACAO_AUTOMATICA = {
   'Títulos': null,
   'Dias em Atraso': null,
   'Desconto': null, // FIEB: único, sem formatação %
+  'Valor da Dívida': 'moeda',
+  'Desconto (%)': 'porcentagem_ampla',
+  'Valor para Pagamento': 'moeda',
+  'Boleto Enviado?': 'radio_sim_nao',
 }
 
 export function getTipoFormatacao(nomeCampo) {

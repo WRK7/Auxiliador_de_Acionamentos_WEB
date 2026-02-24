@@ -69,6 +69,9 @@ export default function Login() {
               <button type="submit" className="login-submit">
                 Entrar
               </button>
+              <p className="login-registro">
+                Não possui conta, <Link to="/registro" className="login-registro-link">registre-se aqui!</Link>
+              </p>
             </form>
           </div>
         </section>

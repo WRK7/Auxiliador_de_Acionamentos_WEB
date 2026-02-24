@@ -126,6 +126,33 @@ export function formatarDataEnquantoDigita(valor) {
   return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4, 8)}`
 }
 
+/** Converte DD/MM/AAAA para YYYY-MM-DD (para input type="date"). Retorna '' se inválido. */
+export function ddMmYyyyToYyyyMmDd(str) {
+  const v = (str || '').trim()
+  if (!v) return ''
+  const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (!m) return ''
+  const [, dd, mm, aaaa] = m
+  const d = new Date(parseInt(aaaa, 10), parseInt(mm, 10) - 1, parseInt(dd, 10))
+  if (Number.isNaN(d.getTime())) return ''
+  const y = d.getFullYear()
+  const m2 = String(d.getMonth() + 1).padStart(2, '0')
+  const d2 = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m2}-${d2}`
+}
+
+/** Converte YYYY-MM-DD para DD/MM/AAAA (valor exibido e armazenado). Retorna '' se inválido. */
+export function yyyyMmDdToDdMmYyyy(str) {
+  const v = (str || '').trim()
+  if (!v) return ''
+  const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!m) return ''
+  const [, aaaa, mm, dd] = m
+  const d = new Date(parseInt(aaaa, 10), parseInt(mm, 10) - 1, parseInt(dd, 10))
+  if (Number.isNaN(d.getTime())) return ''
+  return `${dd}/${mm}/${aaaa}`
+}
+
 // --- Moeda ---
 export function formatarMoeda(valor) {
   const s = (valor || '').toString().replace(/\s/g, '').replace(/[R$\s]/gi, '')

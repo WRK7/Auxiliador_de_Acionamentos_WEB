@@ -4,6 +4,10 @@ import cors from 'cors'
 import { ping } from './db.js'
 import usuariosRouter from './routes/usuarios.js'
 import authRouter from './routes/auth.js'
+import solicitacoesRouter from './routes/solicitacoes.js'
+import acionamentosRouter from './routes/acionamentos.js'
+import aguasGuarirobaRouter from './routes/aguasGuariroba.js'
+import deletadosLogRouter from './routes/deletadosLog.js'
 
 const app = express()
 const PORT = process.env.PORT || 3089
@@ -17,6 +21,10 @@ app.use(cors({ origin: CORS_ORIGINS, credentials: true }))
 app.use(express.json())
 app.use('/api/auth', authRouter)
 app.use('/api/usuarios', usuariosRouter)
+app.use('/api/solicitacoes', solicitacoesRouter)
+app.use('/api/acionamentos', acionamentosRouter)
+app.use('/api/aguas-guariroba', aguasGuarirobaRouter)
+app.use('/api/deletados-log', deletadosLogRouter)
 
 app.get('/api/health', async (req, res) => {
   const db = await ping()

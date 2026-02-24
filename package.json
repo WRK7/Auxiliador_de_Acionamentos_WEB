@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "cd frontend && npm run dev",
     "dev:back": "cd backend && npm run dev",
-    "start:all": "concurrently \"npm run dev\" \"npm run dev:back\"",
+    "start:all": "npx --yes kill-port 3089 && concurrently \"npm run dev\" \"npm run dev:back\"",
     "build": "cd frontend && npm run build",
     "lint": "cd frontend && npm run lint"
   },

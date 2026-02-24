@@ -49,6 +49,11 @@ export function validarCampo(nomeCampo, valor, carteira) {
     return validarPorcentagem(v)
   }
 
+  if (nomeCampo === 'Desconto (%)') {
+    const num = parseFloat((v || '').replace(',', '.').replace(/%/g, ''))
+    return !Number.isNaN(num) && num >= 0 && num <= 1000
+  }
+
   return true
 }
 
@@ -93,6 +98,12 @@ export function validarCampoComMensagem(nomeCampo, valor, carteira) {
     return { ok: true, mensagem: '' }
   }
 
+  if (nomeCampo === 'Desconto (%)') {
+    const num = parseFloat((v || '').replace(',', '.').replace(/%/g, ''))
+    if (Number.isNaN(num) || num < 0 || num > 1000) return { ok: false, mensagem: 'Desconto inválido (0 a 1000%).' }
+    return { ok: true, mensagem: '' }
+  }
+
   return { ok: true, mensagem: '' }
 }
 
@@ -124,6 +135,14 @@ export function aplicarFormatacaoAutomatica(nomeCampo, valor) {
     const num = parseFloat((v || '').replace(',', '.').replace(/%/g, ''))
     if (Number.isNaN(num)) return v
     return formatarPorcentagem(v)
+  }
+
+  if (tipo === 'porcentagem_ampla') {
+    if (v.endsWith('%')) return v
+    const num = parseFloat((v || '').replace(',', '.').replace(/%/g, ''))
+    if (Number.isNaN(num)) return v
+    const clamped = Math.max(0, num)
+    return clamped.toFixed(2).replace('.', ',') + '%'
   }
 
   return v
@@ -178,6 +197,12 @@ export function validacaoCompletaParaGerar(campos, valores, carteira) {
 
     if (nome === 'Desconto Principal' || nome === 'Desconto Juros' || nome === 'Desconto Multa') {
       if (!validarPorcentagem(valor)) erros.push(`${nome}: porcentagem inválida (0 a 100).`)
+      continue
+    }
+
+    if (nome === 'Desconto (%)') {
+      const num = parseFloat((valor || '').replace(',', '.').replace(/%/g, ''))
+      if (Number.isNaN(num) || num < 0 || num > 1000) erros.push(`${nome}: desconto inválido (0 a 1000%).`)
     }
   }
 

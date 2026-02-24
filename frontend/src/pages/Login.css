@@ -286,6 +286,22 @@
   transform: translateY(0);
 }
 
+.login-registro {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.login-registro-link {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.login-registro-link:hover {
+  text-decoration: underline;
+}
+
 /* Em telas menores, empilha: boas-vindas em cima, login embaixo */
 @media (max-width: 768px) {
   .login-layout {

@@ -1,9 +1,12 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Hero from './pages/Hero'
 import Login from './pages/Login'
+import Registro from './pages/Registro'
 import Dashboard from './pages/Dashboard'
 import Historico from './pages/Historico'
 import Usuarios from './pages/Usuarios'
+import AguasGuariroba from './pages/AguasGuariroba'
+import Exclusoes from './pages/Exclusoes'
 import { isAdmin } from './utils/auth'
 import './App.css'
 
@@ -17,9 +20,12 @@ function App() {
     <Routes>
       <Route path="/" element={<Hero />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/registro" element={<Registro />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/historico" element={<Historico />} />
+      <Route path="/aguas-guariroba" element={<AguasGuariroba />} />
       <Route path="/usuarios" element={<ProtectedAdminRoute><Usuarios /></ProtectedAdminRoute>} />
+      <Route path="/exclusoes" element={<Exclusoes />} />
     </Routes>
   )
 }

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiBaseUrl } from '../api/config'
-import { isAdmin, getUser } from '../utils/auth'
+import { isAdmin, isAdminSupremo, getUser } from '../utils/auth'
 import Relogios from '../components/Relogios'
+import ConfirmModal from '../components/ConfirmModal'
 import './Dashboard.css'
 import './Usuarios.css'
 
@@ -45,6 +46,10 @@ export default function Usuarios() {
   const [form, setForm] = useState({ nome: '', usuario: '', senha: '', perfil: 'conciliador', ativo: true })
   const [erroForm, setErroForm] = useState('')
   const [salvando, setSalvando] = useState(false)
+  const [solicitacoes, setSolicitacoes] = useState([])
+  const [solicitacoesCarregando, setSolicitacoesCarregando] = useState(true)
+  const [erroSolicitacoes, setErroSolicitacoes] = useState('')
+  const [confirmModal, setConfirmModal] = useState({ tipo: null, id: null, nome: null })
 
   // Verifica se é admin, senão redireciona
   useEffect(() => {
@@ -69,8 +74,61 @@ export default function Usuarios() {
     }
   }
 
+  async function carregarSolicitacoes() {
+    setSolicitacoesCarregando(true)
+    setErroSolicitacoes('')
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/solicitacoes?status=pendente`)
+      if (!res.ok) throw new Error('Falha ao carregar solicitações')
+      const data = await res.json()
+      setSolicitacoes(data)
+    } catch (e) {
+      setErroSolicitacoes(e.message)
+      setSolicitacoes([])
+    } finally {
+      setSolicitacoesCarregando(false)
+    }
+  }
+
+  function handleAprovar(id) {
+    fetch(`${apiBaseUrl}/api/solicitacoes/${id}/aprovar`, { method: 'PATCH' })
+      .then((res) => res.json().catch(() => ({})))
+      .then((data) => {
+        if (data.ok) {
+          carregar()
+          carregarSolicitacoes()
+        } else {
+          setErroSolicitacoes(data.error || 'Falha ao aprovar')
+        }
+      })
+      .catch(() => setErroSolicitacoes('Falha ao aprovar'))
+  }
+
+  function pedirRejeitar(id) {
+    setConfirmModal({ tipo: 'rejeitar', id, nome: null })
+  }
+
+  function executarRejeitar() {
+    const id = confirmModal.id
+    setConfirmModal({ tipo: null, id: null, nome: null })
+    fetch(`${apiBaseUrl}/api/solicitacoes/${id}/rejeitar`, { method: 'PATCH' })
+      .then((res) => res.json().catch(() => ({})))
+      .then((data) => {
+        if (data.ok) {
+          carregarSolicitacoes()
+        } else {
+          setErroSolicitacoes(data.error || 'Falha ao rejeitar')
+        }
+      })
+      .catch(() => setErroSolicitacoes('Falha ao rejeitar'))
+  }
+
   useEffect(() => {
     carregar()
+  }, [])
+
+  useEffect(() => {
+    if (isAdmin()) carregarSolicitacoes()
   }, [])
 
   function abrirNovo() {
@@ -129,8 +187,13 @@ export default function Usuarios() {
       .finally(() => setSalvando(false))
   }
 
-  function handleExcluir(id, nome) {
-    if (!window.confirm(`Excluir o usuário "${nome}"?`)) return
+  function pedirExcluir(id, nome) {
+    setConfirmModal({ tipo: 'excluir', id, nome })
+  }
+
+  function executarExcluir() {
+    const id = confirmModal.id
+    setConfirmModal({ tipo: null, id: null, nome: null })
     fetch(`${apiBaseUrl}/api/usuarios/${id}`, { method: 'DELETE' })
       .then((res) => {
         if (!res.ok) return res.json().then((d) => { throw new Error(d.error || 'Falha ao excluir') })
@@ -172,6 +235,21 @@ export default function Usuarios() {
               <polyline points="12 6 12 12 16 14" />
             </svg>
           </Link>
+          <Link to="/aguas-guariroba" className="dashboard-menu-quadro" title="Águas Guariroba">
+            <svg className="dashboard-menu-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="4" y="2" width="16" height="20" rx="2" />
+              <line x1="8" y1="6" x2="16" y2="6" />
+              <circle cx="8" cy="10" r="1.5" />
+              <circle cx="12" cy="10" r="1.5" />
+              <circle cx="16" cy="10" r="1.5" />
+              <circle cx="8" cy="14" r="1.5" />
+              <circle cx="12" cy="14" r="1.5" />
+              <circle cx="16" cy="14" r="1.5" />
+              <circle cx="8" cy="18" r="1.5" />
+              <circle cx="12" cy="18" r="1.5" />
+              <circle cx="16" cy="18" r="1.5" />
+            </svg>
+          </Link>
           <span className="dashboard-menu-quadro dashboard-menu-quadro--ativo" title="Usuários">
             <svg className="dashboard-menu-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -180,6 +258,15 @@ export default function Usuarios() {
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
           </span>
+          {isAdminSupremo() && (
+            <Link to="/exclusoes" className="dashboard-menu-quadro" title="Log de Exclusões">
+              <svg className="dashboard-menu-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                <path d="M12 8v4" />
+                <path d="M12 16h.01" />
+              </svg>
+            </Link>
+          )}
         </div>
         <Link to="/login" className="dashboard-menu-quadro dashboard-menu-quadro--sair" title="Sair">
           <svg className="dashboard-menu-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -192,8 +279,7 @@ export default function Usuarios() {
 
       <div className="dashboard-conteudo">
         <Relogios />
-        <div className="usuarios-layout">
-          <div className="usuarios-conteudo">
+        <div className="usuarios-conteudo">
           <div className="usuarios-header">
             <h1 className="dashboard-titulo">Usuários</h1>
             <p className="usuarios-subtitulo">Cadastro e gerenciamento de conciliadores</p>
@@ -211,7 +297,8 @@ export default function Usuarios() {
           {carregando ? (
             <p className="usuarios-carregando">Carregando...</p>
           ) : (
-            <div className="usuarios-tabela-wrap">
+            <div className="usuarios-layout">
+              <div className="usuarios-tabela-wrap">
               <table className="usuarios-tabela">
                 <thead>
                   <tr>
@@ -244,7 +331,7 @@ export default function Usuarios() {
                               <button type="button" className="usuarios-btn usuarios-btn-editar" onClick={() => abrirEditar(u)} title="Editar">
                                 Editar
                               </button>
-                              <button type="button" className="usuarios-btn usuarios-btn-excluir" onClick={() => handleExcluir(u.id, u.nome)} title="Excluir">
+                              <button type="button" className="usuarios-btn usuarios-btn-excluir" onClick={() => pedirExcluir(u.id, u.nome)} title="Excluir">
                                 Excluir
                               </button>
                             </>
@@ -257,15 +344,35 @@ export default function Usuarios() {
                   )}
                 </tbody>
               </table>
+              </div>
+              <aside className="usuarios-sidebar">
+                <div className="usuarios-card usuarios-card-solicitacoes">
+                  <h3 className="usuarios-card-titulo">Solicitações</h3>
+                  {solicitacoesCarregando ? (
+                    <p className="usuarios-card-texto">Carregando...</p>
+                  ) : erroSolicitacoes ? (
+                    <p className="usuarios-card-erro">{erroSolicitacoes}</p>
+                  ) : solicitacoes.length === 0 ? (
+                    <p className="usuarios-card-texto">Nenhuma solicitação pendente.</p>
+                  ) : (
+                    <ul className="usuarios-solicitacoes-lista">
+                      {solicitacoes.map((s) => (
+                        <li key={s.id} className="usuarios-solicitacao-item">
+                          <span className="usuarios-solicitacao-nome">{s.nome}</span>
+                          <span className="usuarios-solicitacao-usuario">{s.usuario}</span>
+                          <span className="usuarios-solicitacao-data">{formatarData(s.created_at)}</span>
+                          <div className="usuarios-solicitacao-acoes">
+                            <button type="button" className="usuarios-btn usuarios-btn-editar" onClick={() => handleAprovar(s.id)} title="Aprovar">Aprovar</button>
+                            <button type="button" className="usuarios-btn usuarios-btn-excluir" onClick={() => pedirRejeitar(s.id)} title="Rejeitar">Rejeitar</button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </aside>
             </div>
           )}
-          </div>
-          <aside className="usuarios-sidebar">
-            <div className="usuarios-card usuarios-card-solicitacoes">
-              <h3 className="usuarios-card-titulo">Solicitações</h3>
-              <p className="usuarios-card-texto">As solicitações de cadastro aparecerão aqui.</p>
-            </div>
-          </aside>
         </div>
       </div>
 
@@ -307,7 +414,7 @@ export default function Usuarios() {
                     <option key={p.value} value={p.value}>{p.label}</option>
                   ))}
                 </select>
-                <span className="usuarios-label-hint">Conciliador: tudo exceto usuários. Admin: tudo exceto admin supremo e outros admins. Admin supremo: tudo.</span>
+                <span className="usuarios-label-hint">Conciliador: acesso a tudo exceto esta área (Usuários). Quem se cadastra e é aprovado começa como conciliador; um admin pode alterar o perfil depois. Admin: tudo exceto admin supremo e outros admins. Admin supremo: tudo.</span>
               </label>
               <label className="usuarios-label">
                 {editando ? 'Nova senha (deixe em branco para não alterar)' : 'Senha'}
@@ -340,6 +447,27 @@ export default function Usuarios() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={confirmModal.tipo === 'excluir'}
+        title="Excluir usuário"
+        message={confirmModal.nome ? `Excluir o usuário "${confirmModal.nome}"?` : 'Excluir este usuário?'}
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onConfirm={executarExcluir}
+        onCancel={() => setConfirmModal({ tipo: null, id: null, nome: null })}
+      />
+      <ConfirmModal
+        open={confirmModal.tipo === 'rejeitar'}
+        title="Rejeitar solicitação"
+        message="Rejeitar esta solicitação de cadastro?"
+        confirmLabel="Rejeitar"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onConfirm={executarRejeitar}
+        onCancel={() => setConfirmModal({ tipo: null, id: null, nome: null })}
+      />
     </main>
   )
 }
