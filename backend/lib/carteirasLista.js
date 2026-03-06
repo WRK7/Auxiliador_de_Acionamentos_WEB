@@ -14,4 +14,5 @@ export const LISTA_CARTEIRAS = [
   'FIEB',
   'VUON CARD',
   'ÁGUAS GUARIROBA',
+  'ANITA',
 ]

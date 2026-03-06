@@ -50,6 +50,9 @@ export default function Usuarios() {
   const [solicitacoesCarregando, setSolicitacoesCarregando] = useState(true)
   const [erroSolicitacoes, setErroSolicitacoes] = useState('')
   const [confirmModal, setConfirmModal] = useState({ tipo: null, id: null, nome: null })
+  const [mensagemExcluido, setMensagemExcluido] = useState(null)
+  const [filtroNome, setFiltroNome] = useState('')
+  const [filtroPerfil, setFiltroPerfil] = useState('todos') // 'todos' | 'admins' | 'conciliadores'
 
   // Verifica se é admin, senão redireciona
   useEffect(() => {
@@ -191,13 +194,43 @@ export default function Usuarios() {
     setConfirmModal({ tipo: 'excluir', id, nome })
   }
 
-  function executarExcluir() {
-    const id = confirmModal.id
+  function executarExcluir(comHistorico = false) {
+    const { id, nome } = confirmModal
+    if (comHistorico) {
+      setConfirmModal({ tipo: null, id: null, nome: null })
+      fetch(`${apiBaseUrl}/api/usuarios/${id}?forcar=1`, { method: 'DELETE' })
+        .then((res) => {
+          if (!res.ok) return res.json().then((d) => { throw new Error(d.error || 'Falha ao excluir') })
+          carregar()
+          setMensagemExcluido(nome || 'Usuário')
+        })
+        .catch((e) => setErro(e.message))
+      return
+    }
     setConfirmModal({ tipo: null, id: null, nome: null })
     fetch(`${apiBaseUrl}/api/usuarios/${id}`, { method: 'DELETE' })
       .then((res) => {
+        if (res.status === 409) {
+          return res.json().then((d) => {
+            setConfirmModal({ tipo: 'excluir_forcar', id, nome })
+            setErro('')
+          })
+        }
         if (!res.ok) return res.json().then((d) => { throw new Error(d.error || 'Falha ao excluir') })
         carregar()
+        setMensagemExcluido(nome || 'Usuário')
+      })
+      .catch((e) => setErro(e.message))
+  }
+
+  function executarExcluirForcar() {
+    const { id, nome } = confirmModal
+    setConfirmModal({ tipo: null, id: null, nome: null })
+    fetch(`${apiBaseUrl}/api/usuarios/${id}?forcar=1`, { method: 'DELETE' })
+      .then((res) => {
+        if (!res.ok) return res.json().then((d) => { throw new Error(d.error || 'Falha ao excluir') })
+        carregar()
+        setMensagemExcluido(nome || 'Usuário')
       })
       .catch((e) => setErro(e.message))
   }
@@ -215,6 +248,14 @@ export default function Usuarios() {
 
   const userLogado = getUser()
   const perfisSelect = perfisPermitidos(userLogado, editando)
+
+  const listaFiltrada = lista.filter((u) => {
+    const passaNome = !filtroNome.trim() || (u.nome && u.nome.toLowerCase().includes(filtroNome.trim().toLowerCase()))
+    let passaPerfil = true
+    if (filtroPerfil === 'admins') passaPerfil = u.perfil === 'admin' || u.perfil === 'admin_supremo'
+    else if (filtroPerfil === 'conciliadores') passaPerfil = u.perfil === 'conciliador'
+    return passaNome && passaPerfil
+  })
 
   return (
     <main className="dashboard-page usuarios-page">
@@ -285,6 +326,17 @@ export default function Usuarios() {
 
       <div className="dashboard-conteudo">
         <Relogios />
+        {mensagemExcluido && (
+          <div className="usuarios-toast-sucesso" role="status" aria-live="polite">
+            <span className="usuarios-toast-icone" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </span>
+            <span>{mensagemExcluido} excluído com sucesso.</span>
+            <button type="button" className="usuarios-toast-ok" onClick={() => setMensagemExcluido(null)}>OK</button>
+          </div>
+        )}
         <div className="usuarios-conteudo">
           <div className="usuarios-header">
             <h1 className="dashboard-titulo">Usuários</h1>
@@ -293,6 +345,42 @@ export default function Usuarios() {
               Novo usuário
             </button>
           </div>
+
+          {!carregando && (
+            <div className="usuarios-filtros">
+              <input
+                type="text"
+                className="usuarios-filtro-input"
+                placeholder="Buscar por nome..."
+                value={filtroNome}
+                onChange={(e) => setFiltroNome(e.target.value)}
+                aria-label="Buscar por nome"
+              />
+              <div className="usuarios-filtro-perfil" role="group" aria-label="Filtrar por perfil">
+                <button
+                  type="button"
+                  className={`usuarios-filtro-btn ${filtroPerfil === 'todos' ? 'usuarios-filtro-btn--ativo' : ''}`}
+                  onClick={() => setFiltroPerfil('todos')}
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  className={`usuarios-filtro-btn ${filtroPerfil === 'admins' ? 'usuarios-filtro-btn--ativo' : ''}`}
+                  onClick={() => setFiltroPerfil('admins')}
+                >
+                  Admins
+                </button>
+                <button
+                  type="button"
+                  className={`usuarios-filtro-btn ${filtroPerfil === 'conciliadores' ? 'usuarios-filtro-btn--ativo' : ''}`}
+                  onClick={() => setFiltroPerfil('conciliadores')}
+                >
+                  Conciliadores
+                </button>
+              </div>
+            </div>
+          )}
 
           {erro && (
             <div className="usuarios-erro" role="alert">
@@ -317,14 +405,16 @@ export default function Usuarios() {
                   </tr>
                 </thead>
                 <tbody>
-                  {lista.length === 0 ? (
+                  {listaFiltrada.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="usuarios-vazio">
-                        Nenhum usuário cadastrado. Clique em &quot;Novo usuário&quot; para começar.
+                        {lista.length === 0
+                          ? 'Nenhum usuário cadastrado. Clique em "Novo usuário" para começar.'
+                          : 'Nenhum usuário encontrado com os filtros aplicados.'}
                       </td>
                     </tr>
                   ) : (
-                    lista.map((u) => (
+                    listaFiltrada.map((u) => (
                       <tr key={u.id}>
                         <td>{u.nome}</td>
                         <td>{u.usuario}</td>
@@ -461,7 +551,17 @@ export default function Usuarios() {
         confirmLabel="Excluir"
         cancelLabel="Cancelar"
         variant="danger"
-        onConfirm={executarExcluir}
+        onConfirm={() => executarExcluir(false)}
+        onCancel={() => setConfirmModal({ tipo: null, id: null, nome: null })}
+      />
+      <ConfirmModal
+        open={confirmModal.tipo === 'excluir_forcar'}
+        title="Excluir usuário mesmo assim?"
+        message={confirmModal.nome ? `O usuário "${confirmModal.nome}" possui acionamentos ou registros da calculadora vinculados. Os registros permanecerão no sistema sem vínculo com usuário. Deseja excluir o usuário mesmo assim?` : 'Este usuário possui acionamentos ou registros vinculados. Os registros permanecerão no sistema sem vínculo. Deseja excluir mesmo assim?'}
+        confirmLabel="Excluir mesmo assim"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onConfirm={executarExcluirForcar}
         onCancel={() => setConfirmModal({ tipo: null, id: null, nome: null })}
       />
       <ConfirmModal

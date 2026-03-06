@@ -97,7 +97,7 @@ export default function Dashboard() {
 
   function handleBlur(nome) {
     const valor = valores[nome] ?? ''
-    const formatado = aplicarFormatacaoAutomatica(nome, valor)
+    const formatado = aplicarFormatacaoAutomatica(nome, valor, carteira)
     if (formatado !== valor) setCampo(nome, formatado)
     const { ok, mensagem } = validarCampoComMensagem(nome, formatado || valor, carteira)
     setErrosCampos((prev) => (ok ? { ...prev, [nome]: '' } : { ...prev, [nome]: mensagem }))
@@ -147,7 +147,7 @@ export default function Dashboard() {
           modelo_gerado: texto,
           informacoes: valores,
           devedor: getDevedorFromInformacoes(valores) || undefined,
-          valor: getValorFromInformacoes(valores) || undefined,
+          valor: (() => { const v = getValorFromInformacoes(valores); return (v && v !== '—' ? v : undefined) })(),
         }),
       })
       const data = await res.json().catch(() => ({}))

@@ -15,6 +15,7 @@ export const CARTEIRAS = [
   'FIEB',
   'VUON CARD',
   'ÁGUAS GUARIROBA',
+  'ANITA',
 ]
 
 /** Dias máximos entre hoje e Data de Vencimento. Default 7 se carteira não estiver no mapa. */
@@ -29,6 +30,17 @@ export const PRAZO_MAXIMO_POR_CARTEIRA = {
   'FIRJAN': 7,
   'FIEB': 7,
   'VUON CARD': 40,
+  'ANITA': 7,
+}
+
+/** Desconto máximo (%) no campo "Desconto (%)". Default 1000 quando não informado. ANITA: 100. */
+export const DESCONTO_MAXIMO_POR_CARTEIRA = {
+  'ANITA': 100,
+}
+
+/** Retorna o desconto máximo permitido para a carteira (campo Desconto (%)). */
+export function getDescontoMaximo(carteira) {
+  return DESCONTO_MAXIMO_POR_CARTEIRA[carteira] ?? 1000
 }
 
 /** Para cada carteira, lista de tipos de acionamento permitidos. */
@@ -43,6 +55,7 @@ export const TIPOS_POR_CARTEIRA = {
   'FIRJAN': ['ACF - A VISTA', 'ACF - BOLETO'],
   'FIEB': ['ACD - A VISTA', 'ACD - BOLETO'],
   'VUON CARD': ['DDA - ACORDO À VISTA', 'ACD - ACORDO PARCELADO'],
+  'ANITA': ['ACA - A VISTA', 'ACA - PARCELADO'],
 }
 
 /** Chave: "Carteira - Tipo". Valor: lista ordenada de nomes de campos. */
@@ -126,6 +139,12 @@ export const CAMPOS_POR_TIPO = {
     'Nome do Devedor', 'CPF/CNPJ', 'Valor da Dívida', 'Desconto (%)', 'Valor da Entrada',
     'Qtd de Parcelas', 'Valor da Parcela', 'Data de Vencimento', 'WhatsApp', 'E-mail', 'Boleto Enviado?',
   ],
+  'ANITA - ACA - A VISTA': [
+    'Nome', 'CPF/CNPJ', 'Valor da Dívida', 'Desconto (%)', 'Valor para Pagamento', 'Data de Vencimento', 'Forma de envio',
+  ],
+  'ANITA - ACA - PARCELADO': [
+    'Nome', 'CPF/CNPJ', 'Valor da Dívida', 'Desconto (%)', 'Valor da Entrada', 'Qtd de Parcelas', 'Valor da Parcela', 'Data de Vencimento', 'Forma de envio',
+  ],
 }
 
 /** Campos que não podem ficar vazios na geração (marcados com * na doc). */
@@ -140,6 +159,7 @@ export const CAMPOS_OBRIGATORIOS = [
   'Contratante', 'Faturas a Pagar', 'Títulos', 'Dias em Atraso', 'Data de Pagamento', 'E-mail',
   'Valor da Dívida', 'Desconto (%)', 'Valor para Pagamento', 'Valor da Entrada', 'Valor da Parcela',
   'Boleto Enviado?',
+  'Forma de envio',
 ]
 
 /** Lista de opções (carteira + tipo) que têm formulário. Para os cardzinhos. */
@@ -240,6 +260,7 @@ export const FORMATACAO_AUTOMATICA = {
   'Desconto (%)': 'porcentagem_ampla',
   'Valor para Pagamento': 'moeda',
   'Boleto Enviado?': 'radio_sim_nao',
+  'Forma de envio': null,
 }
 
 export function getTipoFormatacao(nomeCampo) {

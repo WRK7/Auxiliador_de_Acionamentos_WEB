@@ -16,7 +16,7 @@ import {
   formatarMoeda,
   formatarPorcentagem,
 } from './validators'
-import { isCampoObrigatorio, getTipoFormatacao, PRAZO_MAXIMO_POR_CARTEIRA } from '../data/config'
+import { isCampoObrigatorio, getTipoFormatacao, PRAZO_MAXIMO_POR_CARTEIRA, getDescontoMaximo } from '../data/config'
 
 /** Valida um campo (valor + nome) para exibir ✓/✗. Retorna true se válido ou vazio (e não obrigatório). */
 export function validarCampo(nomeCampo, valor, carteira) {
@@ -50,8 +50,9 @@ export function validarCampo(nomeCampo, valor, carteira) {
   }
 
   if (nomeCampo === 'Desconto (%)') {
+    const max = getDescontoMaximo(carteira)
     const num = parseFloat((v || '').replace(',', '.').replace(/%/g, ''))
-    return !Number.isNaN(num) && num >= 0 && num <= 1000
+    return !Number.isNaN(num) && num >= 0 && num <= max
   }
 
   return true
@@ -99,16 +100,17 @@ export function validarCampoComMensagem(nomeCampo, valor, carteira) {
   }
 
   if (nomeCampo === 'Desconto (%)') {
+    const max = getDescontoMaximo(carteira)
     const num = parseFloat((v || '').replace(',', '.').replace(/%/g, ''))
-    if (Number.isNaN(num) || num < 0 || num > 1000) return { ok: false, mensagem: 'Desconto inválido (0 a 1000%).' }
+    if (Number.isNaN(num) || num < 0 || num > max) return { ok: false, mensagem: `Desconto inválido (0 a ${max}%).` }
     return { ok: true, mensagem: '' }
   }
 
   return { ok: true, mensagem: '' }
 }
 
-/** Aplica formatação no blur. Retorna valor formatado ou o próprio valor. */
-export function aplicarFormatacaoAutomatica(nomeCampo, valor) {
+/** Aplica formatação no blur. Retorna valor formatado ou o próprio valor. carteira opcional (para limitar Desconto (%) na ANITA a 100%). */
+export function aplicarFormatacaoAutomatica(nomeCampo, valor, carteira) {
   const tipo = getTipoFormatacao(nomeCampo)
   const v = (valor || '').toString().trim()
   if (!v) return v
@@ -141,7 +143,8 @@ export function aplicarFormatacaoAutomatica(nomeCampo, valor) {
     if (v.endsWith('%')) return v
     const num = parseFloat((v || '').replace(',', '.').replace(/%/g, ''))
     if (Number.isNaN(num)) return v
-    const clamped = Math.max(0, num)
+    const max = nomeCampo === 'Desconto (%)' && carteira ? getDescontoMaximo(carteira) : undefined
+    const clamped = max != null ? Math.min(max, Math.max(0, num)) : Math.max(0, num)
     return clamped.toFixed(2).replace('.', ',') + '%'
   }
 
@@ -201,8 +204,9 @@ export function validacaoCompletaParaGerar(campos, valores, carteira) {
     }
 
     if (nome === 'Desconto (%)') {
+      const max = getDescontoMaximo(carteira)
       const num = parseFloat((valor || '').replace(',', '.').replace(/%/g, ''))
-      if (Number.isNaN(num) || num < 0 || num > 1000) erros.push(`${nome}: desconto inválido (0 a 1000%).`)
+      if (Number.isNaN(num) || num < 0 || num > max) erros.push(`${nome}: desconto inválido (0 a ${max}%).`)
     }
   }
 

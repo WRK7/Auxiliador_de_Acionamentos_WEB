@@ -295,6 +295,7 @@ export function getDevedorFromInformacoes(informacoes) {
 /** Extrai um valor principal das informacoes para exibição na tabela. */
 export function getValorFromInformacoes(informacoes) {
   return (
+    informacoes['Valor para Pagamento'] ||
     informacoes['Valor Proposto'] ||
     informacoes['Valor Total Atualizado'] ||
     informacoes['Valor Atualizado'] ||

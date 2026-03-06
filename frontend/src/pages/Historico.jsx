@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CARTEIRAS, TIPOS_POR_CARTEIRA } from '../data/config'
-import { getDevedorFromInformacoes, getValorFromInformacoes } from '../data/mockHistorico'
+import { getDevedorFromInformacoes } from '../data/mockHistorico'
 import { isAdmin, getUser, isAdminSupremo as isSupremo } from '../utils/auth'
 import { apiBaseUrl } from '../api/config'
 import Relogios from '../components/Relogios'
@@ -13,6 +13,42 @@ import './Historico.css'
 function getHojeISO() {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const VALOR_KEYS = ['Valor para Pagamento', 'Valor Proposto', 'Valor Total Atualizado', 'Valor Atualizado', 'Valor']
+
+/** Extrai valor de um texto no formato "Label: valor" (ex.: modelo_gerado). */
+function extrairValorDoTexto(texto, labels) {
+  if (!texto || typeof texto !== 'string') return null
+  const linhas = texto.split(/\r?\n/)
+  for (const label of labels) {
+    const prefixo = label + ': '
+    for (const linha of linhas) {
+      if (linha.startsWith(prefixo)) {
+        const val = linha.slice(prefixo.length).trim()
+        if (val) return val
+      }
+    }
+  }
+  return null
+}
+
+/** Valor para exibir na tabela. Usa valor, valor_para_pagamento, informacoes e, por último, modelo_gerado (mesmo texto do "Ver detalhes"). */
+function getValorExibir(a) {
+  if (a.valor && String(a.valor).trim()) return a.valor
+  if (a.valor_para_pagamento != null && String(a.valor_para_pagamento).trim()) return String(a.valor_para_pagamento).trim()
+  const info = a.informacoes
+  const obj = typeof info === 'string' ? (() => { try { return JSON.parse(info) } catch { return {} } })() : (info && typeof info === 'object' ? info : {})
+  for (const k of VALOR_KEYS) {
+    if (obj[k] != null && String(obj[k]).trim()) return String(obj[k]).trim()
+  }
+  const alvo = 'valor para pagamento'
+  for (const [key, val] of Object.entries(obj)) {
+    if (val != null && String(val).trim() && key && key.toLowerCase().replace(/\s+/g, ' ').trim() === alvo) return String(val).trim()
+  }
+  const doModelo = extrairValorDoTexto(a.modelo_gerado, VALOR_KEYS)
+  if (doModelo) return doModelo
+  return '—'
 }
 
 export default function Historico() {
@@ -319,7 +355,7 @@ export default function Historico() {
           <input
             type="text"
             className="dashboard-filtro historico-filtro-texto"
-            placeholder="Buscar por ID, carteira, tipo, devedor, usuário..."
+            placeholder="Buscar por carteira, tipo, devedor, usuário..."
             value={filtroTexto}
             onChange={(e) => setFiltroTexto(e.target.value)}
           />
@@ -377,7 +413,6 @@ export default function Historico() {
             <table className="historico-tabela" role="grid">
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Data</th>
                   <th>Carteira</th>
                   <th>Tipo</th>
@@ -390,19 +425,18 @@ export default function Historico() {
               <tbody>
                 {lista.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="historico-vazio">
+                    <td colSpan={7} className="historico-vazio">
                       Nenhum acionamento encontrado.
                     </td>
                   </tr>
                 ) : (
                   lista.map((a) => (
                     <tr key={a.codigo || a.id}>
-                      <td className="historico-id">{a.codigo || a.id}</td>
                       <td className="historico-data">{a.data_criacao}</td>
                       <td>{a.carteira}</td>
                       <td>{a.tipo}</td>
                       <td>{a.devedor || getDevedorFromInformacoes(a.informacoes || {})}</td>
-                      <td>{a.valor || getValorFromInformacoes(a.informacoes || {})}</td>
+                      <td>{getValorExibir(a)}</td>
                       <td>{a.usuario}</td>
                       <td className="historico-acoes">
                         <button
@@ -446,7 +480,7 @@ export default function Historico() {
           <div className="historico-modal">
             <div className="historico-modal-header">
               <h2 id="historico-modal-titulo" className="historico-modal-titulo">
-                {detalhe.codigo || detalhe.id} · {detalhe.carteira || ''} · {detalhe.tipo || ''}
+                {detalhe.carteira || ''} · {detalhe.tipo || ''}
               </h2>
               <div className="historico-modal-header-actions">
                 {podeExcluir(detalhe) && (
@@ -477,7 +511,6 @@ export default function Historico() {
                 <pre className="historico-modal-texto">{detalhe.modelo_gerado}</pre>
               ) : detalhe.carteira === 'ÁGUAS GUARIROBA' ? (
                 <div className="historico-modal-campos">
-                  <p><strong>Código:</strong> {detalhe.codigo}</p>
                   <p><strong>Titular:</strong> {detalhe.titular || '-'}</p>
                   <p><strong>Documento:</strong> {detalhe.documento_tipo?.toUpperCase()} {detalhe.documento_numero || '-'}</p>
                   <p><strong>Matrícula:</strong> {detalhe.matricula_situacao === 'ativa' ? 'Ativa' : 'Inativa'} — {detalhe.matricula_numero || '-'}</p>
@@ -499,7 +532,7 @@ export default function Historico() {
                   <p><strong>Data:</strong> {detalhe.data_criacao || '-'}</p>
                 </div>
               ) : (
-                <pre className="historico-modal-texto">{`Código: ${detalhe.codigo || detalhe.id}\nCarteira: ${detalhe.carteira || ''}\nTipo: ${detalhe.tipo || ''}\nData: ${detalhe.data_criacao || ''}`}</pre>
+                <pre className="historico-modal-texto">{`Carteira: ${detalhe.carteira || ''}\nTipo: ${detalhe.tipo || ''}\nData: ${detalhe.data_criacao || ''}`}</pre>
               )}
             </div>
           </div>

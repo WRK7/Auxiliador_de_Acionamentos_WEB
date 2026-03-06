@@ -7,7 +7,7 @@ const SALT_ROUNDS = 10
 
 const CAMPOS_USUARIO = 'id, nome, usuario, perfil, ativo, created_at, updated_at'
 
-/** Lista todos os usuários (sem expor senha). */
+/** Lista todos os usuários (sem expor senha). Se a tabela ou coluna não existir, retorna [] para a página carregar. */
 router.get('/', async (req, res) => {
   try {
     const rows = await query(
@@ -15,6 +15,12 @@ router.get('/', async (req, res) => {
     )
     res.json(rows)
   } catch (err) {
+    const schemaFaltando =
+      err.code === 'ER_NO_SUCH_TABLE' ||
+      err.code === 'ER_BAD_FIELD_ERROR' ||
+      err.errno === 1146 ||
+      err.errno === 1054
+    if (schemaFaltando) return res.json([])
     res.status(500).json({ error: err.message })
   }
 })
@@ -118,29 +124,32 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-/** Remove usuário. Não permite se existirem acionamentos ou registros Águas Guariroba vinculados. */
+/** Remove usuário. Sem ?forcar=1: não permite se houver histórico (retorna 409). Com ?forcar=1: exclui mesmo assim (registros ficam com usuario_id NULL). */
 router.delete('/:id', async (req, res) => {
   try {
     const id = req.params.id
+    const forcar = req.query.forcar === '1' || req.query.forcar === 'true'
 
     const [userExists] = await query('SELECT 1 FROM usuarios WHERE id = ?', [id])
     if (!userExists) {
       return res.status(404).json({ error: 'Usuário não encontrado' })
     }
 
-    const [temAcionamentos] = await query(
-      'SELECT 1 FROM acionamentos WHERE usuario_id = ? LIMIT 1',
-      [id]
-    )
-    const [temAguasGuariroba] = await query(
-      'SELECT 1 FROM aguas_guariroba WHERE usuario_id = ? LIMIT 1',
-      [id]
-    )
-    if (temAcionamentos || temAguasGuariroba) {
-      return res.status(409).json({
-        error:
-          'Não é possível excluir: existem acionamentos ou registros da calculadora vinculados a este usuário. Desative o usuário em vez de excluí-lo.',
-      })
+    if (!forcar) {
+      const [temAcionamentos] = await query(
+        'SELECT 1 FROM acionamentos WHERE usuario_id = ? LIMIT 1',
+        [id]
+      )
+      const [temAguasGuariroba] = await query(
+        'SELECT 1 FROM aguas_guariroba WHERE usuario_id = ? LIMIT 1',
+        [id]
+      )
+      if (temAcionamentos || temAguasGuariroba) {
+        return res.status(409).json({
+          error:
+            'Não é possível excluir: existem acionamentos ou registros da calculadora vinculados a este usuário. Desative o usuário em vez de excluí-lo.',
+        })
+      }
     }
 
     const result = await query('DELETE FROM usuarios WHERE id = ?', [id])
@@ -152,7 +161,7 @@ router.delete('/:id', async (req, res) => {
     if (err.errno === 1451) {
       return res.status(409).json({
         error:
-          'Não é possível excluir: existem registros vinculados a este usuário. Desative o usuário em vez de excluí-lo.',
+          'Não é possível excluir: existem registros vinculados. Rode o script alter-usuario-id-set-null.js no backend e tente excluir com "Excluir mesmo assim".',
       })
     }
     res.status(500).json({ error: err.message })

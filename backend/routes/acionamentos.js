@@ -14,10 +14,11 @@ function getUserFromHeaders(req) {
   return id && perfil ? { id: Number(id), perfil } : null
 }
 
-/** Prefixo do codigo a partir do tipo (ex.: ACD - ACORDO -> ACD). */
+/** Prefixo do codigo a partir do tipo (ex.: ACD - ACORDO -> ACD, ACA - A VISTA -> ACA). */
 function prefixoFromTipo(tipo) {
   if (!tipo || typeof tipo !== 'string') return 'ACD'
   const t = tipo.toUpperCase()
+  if (t.startsWith('ACA')) return 'ACA'
   if (t.startsWith('ACD')) return 'ACD'
   if (t.startsWith('ACV')) return 'ACV'
   if (t.startsWith('ACP')) return 'ACP'
@@ -47,13 +48,26 @@ router.post('/', async (req, res) => {
 
     const prefixo = prefixoFromTipo(tipo)
     const year = new Date().getFullYear()
-    const like = `${prefixo}-${year}-%`
-    const [maxRow] = await query(
-      "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(codigo, '-', -1) AS UNSIGNED)), 0) AS n FROM acionamentos WHERE codigo LIKE ?",
-      [like]
-    )
-    const nextSeq = (maxRow?.n ?? 0) + 1
-    const codigo = `${prefixo}-${year}-${String(nextSeq).padStart(3, '0')}`
+    let nextSeq
+    try {
+      await query(
+        'INSERT INTO codigo_sequencia (prefixo, ano, proximo) VALUES (?, ?, 0) ON DUPLICATE KEY UPDATE prefixo = prefixo',
+        [prefixo, year]
+      )
+      await query(
+        'UPDATE codigo_sequencia SET proximo = LAST_INSERT_ID(proximo + 1) WHERE prefixo = ? AND ano = ?',
+        [prefixo, year]
+      )
+      const [seqRow] = await query('SELECT LAST_INSERT_ID() AS n')
+      nextSeq = Math.max(1, Number(seqRow?.n ?? 1))
+    } catch {
+      const [maxRow] = await query(
+        "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(codigo, '-', -1) AS UNSIGNED)), 0) AS n FROM acionamentos WHERE codigo LIKE ?",
+        [`${prefixo}-${year}-%`]
+      )
+      nextSeq = Math.max(1, (maxRow?.n ?? 0) + 1)
+    }
+    const codigo = `${prefixo}-${year}-${String(nextSeq).padStart(5, '0')}`
 
     const informacoesStr =
       informacoes != null && typeof informacoes === 'object'
@@ -156,7 +170,16 @@ router.get('/', async (req, res) => {
       for (let i = 0; i < 8; i++) params.push(termo)
     }
 
-    const sql = `
+    const sqlComValorPag = `
+      SELECT a.id, a.codigo, a.created_at, a.carteira, a.tipo, a.modelo_gerado, a.informacoes, a.devedor, a.valor, a.usuario_id,
+             a.\`valor_para_pagamento\`,
+             u.nome AS usuario_nome, u.usuario AS usuario_login
+      FROM acionamentos a
+      INNER JOIN usuarios u ON u.id = a.usuario_id
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY a.created_at DESC
+    `
+    const sqlSemValorPag = `
       SELECT a.id, a.codigo, a.created_at, a.carteira, a.tipo, a.modelo_gerado, a.informacoes, a.devedor, a.valor, a.usuario_id,
              u.nome AS usuario_nome, u.usuario AS usuario_login
       FROM acionamentos a
@@ -164,26 +187,77 @@ router.get('/', async (req, res) => {
       WHERE ${conditions.join(' AND ')}
       ORDER BY a.created_at DESC
     `
-    const rows = await query(sql, params)
+    let rows
+    try {
+      rows = await query(sqlComValorPag, params)
+    } catch (e) {
+      if (e.code === 'ER_BAD_FIELD_ERROR' || e.errno === 1054) {
+        rows = await query(sqlSemValorPag, params)
+        rows.forEach((r) => { r.valor_para_pagamento = null }) // coluna não existe
+      } else throw e
+    }
+
+    const VALOR_KEYS = ['Valor para Pagamento', 'Valor Proposto', 'Valor Total Atualizado', 'Valor Atualizado', 'Valor']
+
+    function valorFromInformacoes(info) {
+      if (!info || typeof info !== 'object') return null
+      for (const k of VALOR_KEYS) {
+        if (info[k] != null && String(info[k]).trim() !== '') return String(info[k]).trim()
+      }
+      // Fallback: chave com nome parecido (ex. variação de espaço/unicode)
+      const alvo = 'valor para pagamento'
+      for (const [key, val] of Object.entries(info)) {
+        if (val != null && String(val).trim() !== '' && key && key.toLowerCase().replace(/\s+/g, ' ').trim() === alvo) return String(val).trim()
+      }
+      return null
+    }
+
+    /** Fallback: extrai valor do JSON bruto quando a chave no objeto parseado não bate (ex.: encoding). */
+    function valorFromRawJson(raw) {
+      if (raw == null) return null
+      const str = typeof raw === 'string' ? raw : (Buffer.isBuffer(raw) ? raw.toString('utf8') : String(raw))
+      const m = str.match(/"Valor para Pagamento"\s*:\s*"([^"]*)"/)
+      if (m && m[1] && m[1].trim()) return m[1].trim()
+      const m2 = str.match(/"Valor Proposto"\s*:\s*"([^"]*)"/)
+      if (m2 && m2[1] && m2[1].trim()) return m2[1].trim()
+      return null
+    }
 
     // Formatar created_at para DD/MM/YYYY HH:mm (frontend espera data_criacao nesse formato)
-    const list = rows.map((r) => ({
-      ...r,
-      data_criacao: r.created_at
-        ? new Date(r.created_at).toLocaleString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false,
-          })
-        : '',
-      id: r.codigo,
-      usuario: r.usuario_nome || r.usuario_login || '',
-      informacoes: r.informacoes ? (typeof r.informacoes === 'string' ? JSON.parse(r.informacoes) : r.informacoes) : {},
-    }))
+    const list = rows.map((r) => {
+      let informacoes = {}
+      try {
+        const raw = r.informacoes
+        if (raw != null) {
+          informacoes = typeof raw === 'string' ? JSON.parse(raw) : raw
+          if (typeof informacoes !== 'object' || informacoes === null) informacoes = {}
+        }
+      } catch {
+        informacoes = {}
+      }
+      const valorExtraido = valorFromInformacoes(informacoes)
+      const valorFromRaw = valorFromRawJson(typeof r.informacoes === 'string' ? r.informacoes : null)
+      const valorCol = r.valor_para_pagamento != null && String(r.valor_para_pagamento).trim() !== '' ? String(r.valor_para_pagamento).trim() : null
+      const valorExibir = (r.valor != null && String(r.valor).trim() !== '') ? String(r.valor).trim() : (valorCol || valorExtraido || valorFromRaw || null)
+      return {
+        ...r,
+        data_criacao: r.created_at
+          ? new Date(r.created_at).toLocaleString('pt-BR', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: false,
+            })
+          : '',
+        id: r.codigo,
+        usuario: r.usuario_nome || r.usuario_login || '',
+        informacoes,
+        valor: valorExibir,
+      }
+    })
 
     res.json(list)
   } catch (err) {

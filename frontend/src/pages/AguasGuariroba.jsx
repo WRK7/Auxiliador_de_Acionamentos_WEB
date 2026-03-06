@@ -11,9 +11,14 @@ import './AguasGuariroba.css'
 const formatCurrency = (value) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 
+// Converte string de moeda (pt-BR ou só dígitos) em número.
+// Ex.: "1.234,56" ou "1234,56" → 1234.56. Não divide por 100; os 2 últimos dígitos já são centavos.
 const parseMoney = (str) => {
   if (!str || !str.trim()) return 0
-  const n = parseFloat(String(str).replace(/\D/g, '').replace(/(\d+)(\d{2})$/, '$1.$2')) / 100
+  const onlyDigits = String(str).replace(/\D/g, '')
+  if (!onlyDigits) return 0
+  const withCents = onlyDigits.replace(/(\d+)(\d{2})$/, '$1.$2')
+  const n = parseFloat(withCents)
   return Number.isNaN(n) ? 0 : n
 }
 
