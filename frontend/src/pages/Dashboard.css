@@ -239,11 +239,14 @@
   gap: 0.25rem;
 }
 
+/* Altura mínima do bloco do label para alinhar os inputs quando o texto quebra em 2 linhas ou tem hint (máx. X dias) */
 .dashboard-campo-label {
   font-size: 0.78rem;
   font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: 0.02em;
+  min-height: 2.9em;
+  line-height: 1.35;
 }
 
 .campo-obrigatorio {
