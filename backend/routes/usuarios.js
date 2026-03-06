@@ -118,15 +118,43 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-/** Remove usuário. */
+/** Remove usuário. Não permite se existirem acionamentos ou registros Águas Guariroba vinculados. */
 router.delete('/:id', async (req, res) => {
   try {
-    const result = await query('DELETE FROM usuarios WHERE id = ?', [req.params.id])
+    const id = req.params.id
+
+    const [userExists] = await query('SELECT 1 FROM usuarios WHERE id = ?', [id])
+    if (!userExists) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    const [temAcionamentos] = await query(
+      'SELECT 1 FROM acionamentos WHERE usuario_id = ? LIMIT 1',
+      [id]
+    )
+    const [temAguasGuariroba] = await query(
+      'SELECT 1 FROM aguas_guariroba WHERE usuario_id = ? LIMIT 1',
+      [id]
+    )
+    if (temAcionamentos || temAguasGuariroba) {
+      return res.status(409).json({
+        error:
+          'Não é possível excluir: existem acionamentos ou registros da calculadora vinculados a este usuário. Desative o usuário em vez de excluí-lo.',
+      })
+    }
+
+    const result = await query('DELETE FROM usuarios WHERE id = ?', [id])
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Usuário não encontrado' })
     }
     res.status(204).send()
   } catch (err) {
+    if (err.errno === 1451) {
+      return res.status(409).json({
+        error:
+          'Não é possível excluir: existem registros vinculados a este usuário. Desative o usuário em vez de excluí-lo.',
+      })
+    }
     res.status(500).json({ error: err.message })
   }
 })
