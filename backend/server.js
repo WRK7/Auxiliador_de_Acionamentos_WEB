@@ -7,6 +7,7 @@ import authRouter from './routes/auth.js'
 import solicitacoesRouter from './routes/solicitacoes.js'
 import acionamentosRouter from './routes/acionamentos.js'
 import aguasGuarirobaRouter from './routes/aguasGuariroba.js'
+import carteirasRouter from './routes/carteiras.js'
 import deletadosLogRouter from './routes/deletadosLog.js'
 
 const app = express()
@@ -24,6 +25,7 @@ app.use('/api/usuarios', usuariosRouter)
 app.use('/api/solicitacoes', solicitacoesRouter)
 app.use('/api/acionamentos', acionamentosRouter)
 app.use('/api/aguas-guariroba', aguasGuarirobaRouter)
+app.use('/api/carteiras', carteirasRouter)
 app.use('/api/deletados-log', deletadosLogRouter)
 
 app.get('/api/health', async (req, res) => {

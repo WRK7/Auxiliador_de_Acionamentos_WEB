@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   CARTEIRAS,
@@ -25,17 +25,33 @@ const CARTEIRA_URANIA = 'ÁGUAS GUARIROBA'
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const [carteirasAtivas, setCarteirasAtivas] = useState([])
   const [carteira, setCarteira] = useState('')
   const [tipo, setTipo] = useState('')
   const [filtro, setFiltro] = useState('')
   const [valores, setValores] = useState({})
   const [errosCampos, setErrosCampos] = useState({})
 
+  useEffect(() => {
+    fetch(`${apiBaseUrl}/api/carteiras`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        const ativas = Array.isArray(data) ? data.filter((c) => c.ativo).map((c) => c.nome) : []
+        setCarteirasAtivas(ativas)
+      })
+      .catch(() => setCarteirasAtivas([]))
+  }, [])
+
+  const carteirasDisponiveis = useMemo(() => {
+    if (carteirasAtivas.length === 0) return CARTEIRAS
+    return CARTEIRAS.filter((c) => carteirasAtivas.includes(c))
+  }, [carteirasAtivas])
+
   const carteirasFiltradas = useMemo(() => {
-    if (!filtro.trim()) return CARTEIRAS
+    if (!filtro.trim()) return carteirasDisponiveis
     const q = filtro.trim().toLowerCase()
-    return CARTEIRAS.filter((c) => c.toLowerCase().includes(q))
-  }, [filtro])
+    return carteirasDisponiveis.filter((c) => c.toLowerCase().includes(q))
+  }, [filtro, carteirasDisponiveis])
 
   const tiposDaCarteira = carteira ? (TIPOS_POR_CARTEIRA[carteira] || []) : []
   const campos = useMemo(() => getCamposPara(carteira, tipo), [carteira, tipo])
@@ -229,14 +245,22 @@ export default function Dashboard() {
             </svg>
           </Link>
           {isAdmin() && (
-            <Link to="/usuarios" className="dashboard-menu-quadro" title="Usuários">
-              <svg className="dashboard-menu-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-            </Link>
+            <>
+              <Link to="/usuarios" className="dashboard-menu-quadro" title="Usuários">
+                <svg className="dashboard-menu-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </Link>
+              <Link to="/carteiras" className="dashboard-menu-quadro" title="Carteiras">
+                <svg className="dashboard-menu-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                  <polyline points="2 17 12 22 22 17" />
+                </svg>
+              </Link>
+            </>
           )}
           {isAdminSupremo() && (
             <Link to="/exclusoes" className="dashboard-menu-quadro" title="Log de Exclusões">

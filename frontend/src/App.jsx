@@ -5,6 +5,7 @@ import Registro from './pages/Registro'
 import Dashboard from './pages/Dashboard'
 import Historico from './pages/Historico'
 import Usuarios from './pages/Usuarios'
+import Carteiras from './pages/Carteiras'
 import AguasGuariroba from './pages/AguasGuariroba'
 import Exclusoes from './pages/Exclusoes'
 import { isAdmin } from './utils/auth'
@@ -25,6 +26,7 @@ function App() {
       <Route path="/historico" element={<Historico />} />
       <Route path="/aguas-guariroba" element={<AguasGuariroba />} />
       <Route path="/usuarios" element={<ProtectedAdminRoute><Usuarios /></ProtectedAdminRoute>} />
+      <Route path="/carteiras" element={<ProtectedAdminRoute><Carteiras /></ProtectedAdminRoute>} />
       <Route path="/exclusoes" element={<Exclusoes />} />
     </Routes>
   )
