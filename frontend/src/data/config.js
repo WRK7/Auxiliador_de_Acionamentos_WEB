@@ -47,7 +47,7 @@ export function getDescontoMaximo(carteira) {
 export const TIPOS_POR_CARTEIRA = {
   'SENAC RJ': ['ACD - ACORDO', 'ACD - ACORDO PARCELADO'],
   'SENAC MS': ['ACD - ACORDO', 'ACD - ACORDO PARCELADO'],
-  'SENAC BA': ['ACD - ACORDO', 'ACD - ACORDO PARCELADO'],
+  'SENAC BA': ['ACD - ACORDO'],
   'CEDAE': ['ACV - ACORDO À VISTA', 'ACP - ACORDO PARCELADO', 'VIA - SEGUNDA VIA'],
   'SESC': ['ACD - ACORDO', 'ACD - PARCELADO'],
   'CASSEMS': ['ACC - A VISTA', 'ACC - PARCELADO'],
