@@ -61,11 +61,11 @@ export const TIPOS_POR_CARTEIRA = {
 /** Chave: "Carteira - Tipo". Valor: lista ordenada de nomes de campos. */
 export const CAMPOS_POR_TIPO = {
   'SENAC RJ - ACD - ACORDO': [
-    'Nome do Devedor', 'CPF/CNPJ', 'Valor Total Atualizado', 'Desconto Principal', 'Desconto Juros', 'Desconto Multa',
+    'Nome do Devedor', 'CPF/CNPJ', 'CRE/Contrato', 'Valor Total Atualizado', 'Desconto Principal', 'Desconto Juros', 'Desconto Multa',
     'Valor Proposto', 'Data de Vencimento', 'WhatsApp', 'E-mail', 'Observações',
   ],
   'SENAC RJ - ACD - ACORDO PARCELADO': [
-    'Nome do Devedor', 'CPF/CNPJ', 'Valor Total Atualizado', 'Desconto Principal', 'Desconto Juros', 'Desconto Multa',
+    'Nome do Devedor', 'CPF/CNPJ', 'CRE/Contrato', 'Valor Total Atualizado', 'Desconto Principal', 'Desconto Juros', 'Desconto Multa',
     'Valor Proposto', 'Entrada de', 'Quantidade de Parcelas', 'Valor das Parcelas', 'Data de Vencimento', 'WhatsApp', 'E-mail', 'Observações',
   ],
   'SENAC MS - ACD - ACORDO': [
@@ -79,10 +79,6 @@ export const CAMPOS_POR_TIPO = {
   'SENAC BA - ACD - ACORDO': [
     'Nome do Devedor', 'CPF/CNPJ', 'CRE/Contrato', 'Valor Total Atualizado', 'Desconto Principal', 'Desconto Juros', 'Desconto Multa',
     'Valor Proposto', 'Data de Vencimento', 'Forma de Pagamento', 'WhatsApp', 'E-mail', 'Observações',
-  ],
-  'SENAC BA - ACD - ACORDO PARCELADO': [
-    'Nome do Devedor', 'CPF/CNPJ', 'CRE/Contrato', 'Valor Total Atualizado', 'Desconto Principal', 'Desconto Juros', 'Desconto Multa',
-    'Valor Proposto', 'Entrada de', 'Quantidade de Parcelas', 'Valor das Parcelas', 'Data de Vencimento', 'Forma de Pagamento', 'WhatsApp', 'E-mail', 'Observações',
   ],
   'CEDAE - ACV - ACORDO À VISTA': [
     'Matrícula', 'Gravação (Telefone)', 'Valor Original', 'Valor Atualizado', 'Desconto Principal', 'Desconto Juros', 'Desconto Multa',

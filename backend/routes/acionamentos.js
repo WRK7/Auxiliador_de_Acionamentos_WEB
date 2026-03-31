@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { query } from '../db.js'
+import { query, getConnection } from '../db.js'
 import { LABEL_TO_COLUMN, COLUNAS_ELEMENTOS } from '../lib/camposAcionamento.js'
 
 const router = Router()
@@ -29,6 +29,40 @@ function prefixoFromTipo(tipo) {
   return 'ACD'
 }
 
+function isDuplicateKeyError(err, keyName = '') {
+  if (!err) return false
+  const duplicate = err.code === 'ER_DUP_ENTRY' || err.errno === 1062
+  if (!duplicate) return false
+  if (!keyName) return true
+  return String(err.message || '').includes(keyName)
+}
+
+async function gerarCodigoAcionamento(prefixo, year) {
+  let nextSeq
+  const seqConn = await getConnection()
+  try {
+    await seqConn.query(
+      'INSERT INTO codigo_sequencia (prefixo, ano, proximo) VALUES (?, ?, 0) ON DUPLICATE KEY UPDATE prefixo = prefixo',
+      [prefixo, year]
+    )
+    await seqConn.query(
+      'UPDATE codigo_sequencia SET proximo = LAST_INSERT_ID(proximo + 1) WHERE prefixo = ? AND ano = ?',
+      [prefixo, year]
+    )
+    const [seqRow] = await seqConn.query('SELECT LAST_INSERT_ID() AS n')
+    nextSeq = Math.max(1, Number(seqRow?.n ?? 1))
+  } catch {
+    const [maxRow] = await seqConn.query(
+      "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(codigo, '-', -1) AS UNSIGNED)), 0) AS n FROM acionamentos WHERE codigo LIKE ?",
+      [`${prefixo}-${year}-%`]
+    )
+    nextSeq = Math.max(1, (maxRow?.n ?? 0) + 1)
+  } finally {
+    seqConn.release()
+  }
+  return `${prefixo}-${year}-${String(nextSeq).padStart(5, '0')}`
+}
+
 /**
  * POST /api/acionamentos — salva acionamento gerado no Dashboard.
  * Body: { carteira, tipo, modelo_gerado, informacoes?, devedor?, valor? }
@@ -48,26 +82,6 @@ router.post('/', async (req, res) => {
 
     const prefixo = prefixoFromTipo(tipo)
     const year = new Date().getFullYear()
-    let nextSeq
-    try {
-      await query(
-        'INSERT INTO codigo_sequencia (prefixo, ano, proximo) VALUES (?, ?, 0) ON DUPLICATE KEY UPDATE prefixo = prefixo',
-        [prefixo, year]
-      )
-      await query(
-        'UPDATE codigo_sequencia SET proximo = LAST_INSERT_ID(proximo + 1) WHERE prefixo = ? AND ano = ?',
-        [prefixo, year]
-      )
-      const [seqRow] = await query('SELECT LAST_INSERT_ID() AS n')
-      nextSeq = Math.max(1, Number(seqRow?.n ?? 1))
-    } catch {
-      const [maxRow] = await query(
-        "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(codigo, '-', -1) AS UNSIGNED)), 0) AS n FROM acionamentos WHERE codigo LIKE ?",
-        [`${prefixo}-${year}-%`]
-      )
-      nextSeq = Math.max(1, (maxRow?.n ?? 0) + 1)
-    }
-    const codigo = `${prefixo}-${year}-${String(nextSeq).padStart(5, '0')}`
 
     const informacoesStr =
       informacoes != null && typeof informacoes === 'object'
@@ -88,27 +102,43 @@ router.post('/', async (req, res) => {
     }
 
     const baseCols = ['codigo', 'carteira', 'tipo', 'modelo_gerado', 'informacoes', 'devedor', 'valor', 'usuario_id']
-    const baseVals = [
-      codigo,
-      carteira.trim(),
-      tipo.trim(),
-      modelo_gerado.trim(),
-      informacoesStr,
-      devedor?.trim() || null,
-      valor?.trim() || null,
-      user.id,
-    ]
     const todasColunas = [...baseCols, ...COLUNAS_ELEMENTOS]
-    const todosValores = [...baseVals, ...COLUNAS_ELEMENTOS.map((c) => valoresPorColuna[c] ?? null)]
     const placeholders = todasColunas.map(() => '?').join(', ')
     const colList = todasColunas.map((c) => `\`${c}\``).join(', ')
+    const valoresElementos = COLUNAS_ELEMENTOS.map((c) => valoresPorColuna[c] ?? null)
 
-    await query(
-      `INSERT INTO acionamentos (${colList}) VALUES (${placeholders})`,
-      todosValores
-    )
+    const MAX_TENTATIVAS = 5
+    let codigo = null
+    for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa += 1) {
+      codigo = await gerarCodigoAcionamento(prefixo, year)
+      const baseVals = [
+        codigo,
+        carteira.trim(),
+        tipo.trim(),
+        modelo_gerado.trim(),
+        informacoesStr,
+        devedor?.trim() || null,
+        valor?.trim() || null,
+        user.id,
+      ]
+      const todosValores = [...baseVals, ...valoresElementos]
+      try {
+        await query(
+          `INSERT INTO acionamentos (${colList}) VALUES (${placeholders})`,
+          todosValores
+        )
+        return res.status(201).json({ ok: true, codigo, message: 'Acionamento salvo no histórico.' })
+      } catch (insertErr) {
+        if (isDuplicateKeyError(insertErr, 'uk_codigo')) continue
+        throw insertErr
+      }
+    }
 
-    res.status(201).json({ ok: true, codigo, message: 'Acionamento salvo no histórico.' })
+    return res.status(409).json({
+      error: 'Não foi possível gerar um código único para o acionamento. Tente novamente.',
+      code: 'CODIGO_DUPLICADO',
+      codigo_sugerido: codigo,
+    })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
