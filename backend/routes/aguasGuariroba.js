@@ -52,10 +52,10 @@ router.post('/', async (req, res) => {
     const year = new Date().getFullYear()
     const prefix = `AG-${year}-`
     const rows = await query(
-      "SELECT COUNT(*) AS total FROM aguas_guariroba WHERE codigo LIKE ?",
+      "SELECT MAX(CAST(SUBSTRING_INDEX(codigo, '-', -1) AS UNSIGNED)) AS max_seq FROM aguas_guariroba WHERE codigo LIKE ?",
       [`${prefix}%`]
     )
-    const nextSeq = Number(rows?.[0]?.total ?? 0) + 1
+    const nextSeq = Number(rows?.[0]?.max_seq ?? 0) + 1
     const codigo = `${prefix}${String(nextSeq).padStart(3, '0')}`
 
     const vencimentoDate = vencimento && /^\d{4}-\d{2}-\d{2}$/.test(String(vencimento).trim()) ? String(vencimento).trim() : null
