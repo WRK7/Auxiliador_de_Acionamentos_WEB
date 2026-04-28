@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(sc query:*)",
-      "Bash(curl -s http://localhost:3089/api/health)"
+      "Bash(curl -s http://localhost:3089/api/health)",
+      "Bash(grep -E \"\\\\.js$\")"
     ]
   }
 }

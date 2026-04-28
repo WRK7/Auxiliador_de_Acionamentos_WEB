@@ -16,6 +16,7 @@ export const CARTEIRAS = [
   'VUON CARD',
   'ÁGUAS GUARIROBA',
   'ANITA',
+  'CAGECE',
 ]
 
 /** Dias máximos entre hoje e Data de Vencimento. Default 7 se carteira não estiver no mapa. */
@@ -31,11 +32,13 @@ export const PRAZO_MAXIMO_POR_CARTEIRA = {
   'FIEB': 7,
   'VUON CARD': 40,
   'ANITA': 7,
+  'CAGECE': 7,
 }
 
 /** Desconto máximo (%) no campo "Desconto (%)". Default 1000 quando não informado. ANITA: 100. */
 export const DESCONTO_MAXIMO_POR_CARTEIRA = {
   'ANITA': 100,
+  'CAGECE': 100,
 }
 
 /** Retorna o desconto máximo permitido para a carteira (campo Desconto (%)). */
@@ -56,6 +59,7 @@ export const TIPOS_POR_CARTEIRA = {
   'FIEB': ['ACD - A VISTA', 'ACD - BOLETO'],
   'VUON CARD': ['DDA - ACORDO À VISTA', 'ACD - ACORDO PARCELADO'],
   'ANITA': ['ACA - A VISTA', 'ACA - PARCELADO'],
+  'CAGECE': ['ACD - ACORDO', 'ACD - ACORDO PARCELADO'],
 }
 
 /** Chave: "Carteira - Tipo". Valor: lista ordenada de nomes de campos. */
@@ -141,6 +145,12 @@ export const CAMPOS_POR_TIPO = {
   'ANITA - ACA - PARCELADO': [
     'Nome', 'CPF/CNPJ', 'Valor da Dívida', 'Desconto (%)', 'Valor da Entrada', 'Qtd de Parcelas', 'Valor da Parcela', 'Data de Vencimento', 'Forma de envio',
   ],
+  'CAGECE - ACD - ACORDO': [
+    'Unidade', 'CPF/CNPJ', 'Titular', 'Telefone', 'Valor Proposto', 'Data de Vencimento', 'Enviar pelo Whats/E-mail', 'Observações',
+  ],
+  'CAGECE - ACD - ACORDO PARCELADO': [
+    'Unidade', 'CPF/CNPJ', 'Titular', 'Telefone', 'Valor Desconto', 'Valor da Entrada', 'Quantidade de Parcelas', 'Valor de Cada Parcela', 'Data de Vencimento', 'Enviar pelo Whats/E-mail', 'Observações',
+  ],
 }
 
 /** Campos que não podem ficar vazios na geração (marcados com * na doc). */
@@ -156,6 +166,7 @@ export const CAMPOS_OBRIGATORIOS = [
   'Valor da Dívida', 'Desconto (%)', 'Valor para Pagamento', 'Valor da Entrada', 'Valor da Parcela',
   'Boleto Enviado?',
   'Forma de envio',
+  'Titular', 'Valor Desconto', 'Enviar pelo Whats/E-mail',
 ]
 
 /** Lista de opções (carteira + tipo) que têm formulário. Para os cardzinhos. */
@@ -245,6 +256,7 @@ export const FORMATACAO_AUTOMATICA = {
   'Parcelas': null,
   'TITULO': null,
   'Nome': null,
+  'Titular': null,
   'Fatura Vencida': null,
   'Telefone': null,
   'Contratante': null,
@@ -257,6 +269,8 @@ export const FORMATACAO_AUTOMATICA = {
   'Valor para Pagamento': 'moeda',
   'Boleto Enviado?': 'radio_sim_nao',
   'Forma de envio': null,
+  'Valor Desconto': 'porcentagem_ampla',
+  'Enviar pelo Whats/E-mail': null,
 }
 
 export function getTipoFormatacao(nomeCampo) {

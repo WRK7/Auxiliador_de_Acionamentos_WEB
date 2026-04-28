@@ -18,6 +18,10 @@ import {
 } from './validators'
 import { isCampoObrigatorio, getTipoFormatacao, PRAZO_MAXIMO_POR_CARTEIRA, getDescontoMaximo } from '../data/config'
 
+function isCampoDescontoComLimite(nomeCampo) {
+  return nomeCampo === 'Desconto (%)' || nomeCampo === 'Valor Desconto'
+}
+
 /** Valida um campo (valor + nome) para exibir ✓/✗. Retorna true se válido ou vazio (e não obrigatório). */
 export function validarCampo(nomeCampo, valor, carteira) {
   const v = (valor || '').toString().trim()
@@ -49,7 +53,7 @@ export function validarCampo(nomeCampo, valor, carteira) {
     return validarPorcentagem(v)
   }
 
-  if (nomeCampo === 'Desconto (%)') {
+  if (isCampoDescontoComLimite(nomeCampo)) {
     const max = getDescontoMaximo(carteira)
     const num = parseFloat((v || '').replace(',', '.').replace(/%/g, ''))
     return !Number.isNaN(num) && num >= 0 && num <= max
@@ -99,7 +103,7 @@ export function validarCampoComMensagem(nomeCampo, valor, carteira) {
     return { ok: true, mensagem: '' }
   }
 
-  if (nomeCampo === 'Desconto (%)') {
+  if (isCampoDescontoComLimite(nomeCampo)) {
     const max = getDescontoMaximo(carteira)
     const num = parseFloat((v || '').replace(',', '.').replace(/%/g, ''))
     if (Number.isNaN(num) || num < 0 || num > max) return { ok: false, mensagem: `Desconto inválido (0 a ${max}%).` }
@@ -143,7 +147,7 @@ export function aplicarFormatacaoAutomatica(nomeCampo, valor, carteira) {
     if (v.endsWith('%')) return v
     const num = parseFloat((v || '').replace(',', '.').replace(/%/g, ''))
     if (Number.isNaN(num)) return v
-    const max = nomeCampo === 'Desconto (%)' && carteira ? getDescontoMaximo(carteira) : undefined
+    const max = isCampoDescontoComLimite(nomeCampo) && carteira ? getDescontoMaximo(carteira) : undefined
     const clamped = max != null ? Math.min(max, Math.max(0, num)) : Math.max(0, num)
     return clamped.toFixed(2).replace('.', ',') + '%'
   }
@@ -203,7 +207,7 @@ export function validacaoCompletaParaGerar(campos, valores, carteira) {
       continue
     }
 
-    if (nome === 'Desconto (%)') {
+    if (isCampoDescontoComLimite(nome)) {
       const max = getDescontoMaximo(carteira)
       const num = parseFloat((valor || '').replace(',', '.').replace(/%/g, ''))
       if (Number.isNaN(num) || num < 0 || num > max) erros.push(`${nome}: desconto inválido (0 a ${max}%).`)
